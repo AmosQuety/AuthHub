@@ -171,6 +171,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       id: user.id,
       email: user.email,
       emailVerified: user.emailVerified,
+      roles: user.roles,
     }));
 
     AuditService.log({
@@ -197,6 +198,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
         id: user.id,
         email: user.email,
         emailVerified: user.emailVerified,
+        roles: user.roles,
       },
     });
   } catch (error) {
@@ -226,6 +228,7 @@ export const me = async (req: Request, res: Response, next: NextFunction): Promi
         id: true,
         email: true,
         emailVerified: true,
+        roles: true,
         createdAt: true,
       },
     });
@@ -352,7 +355,8 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     }
 
     // 3. Token Rotation — delete old session, create new one
-    await prisma.session.delete({ where: { id: sessionId } });
+    // We use deleteMany to avoid throwing if the session was already removed by a concurrent request
+    await prisma.session.deleteMany({ where: { id: sessionId } });
 
     const newSession = await prisma.session.create({
       data: {
@@ -655,6 +659,125 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     });
 
     res.json({ message: "Password reset successfully. Please log in with your new password." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSessions = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user || !req.user.sub) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const sessions = await prisma.session.findMany({
+      where: { userId: req.user.sub },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        deviceInfo: true,
+        ipAddress: true,
+        expiresAt: true,
+        createdAt: true,
+      }
+    });
+
+    // Parse User-Agent string to structured device info for the frontend
+    const parsedSessions = sessions.map(session => {
+      const uaString = session.deviceInfo || "";
+      let browser = "Unknown Browser";
+      let os = "Unknown OS";
+      let isMobile = false;
+
+      if (uaString.includes("Firefox")) browser = "Firefox";
+      else if (uaString.includes("Edg")) browser = "Edge";
+      else if (uaString.includes("Chrome")) browser = "Chrome";
+      else if (uaString.includes("Safari") && !uaString.includes("Chrome")) browser = "Safari";
+
+      if (uaString.includes("Windows")) os = "Windows";
+      else if (uaString.includes("Mac OS")) os = "macOS";
+      else if (uaString.includes("Linux")) os = "Linux";
+      else if (uaString.includes("Android")) { os = "Android"; isMobile = true; }
+      else if (uaString.includes("iPhone") || uaString.includes("iPad")) { os = "iOS"; isMobile = true; }
+
+      return {
+        id: session.id,
+        ipAddress: session.ipAddress,
+        expiresAt: session.expiresAt.toISOString(),
+        createdAt: session.createdAt.toISOString(),
+        deviceInfo: {
+          browser,
+          os,
+          isMobile,
+          rawUserAgent: uaString,
+        }
+      };
+    });
+
+    res.json({ sessions: parsedSessions });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteSession = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user || !req.user.sub) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const sessionId = req.params.id as string;
+
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId }
+    });
+
+    if (!session) {
+      res.status(404).json({ error: "Session not found" });
+      return;
+    }
+
+    // Only allow users to delete their own sessions
+    if (session.userId !== req.user.sub) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    await prisma.session.delete({
+      where: { id: sessionId }
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAuditLogs = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user || !req.user.sub) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const logs = await prisma.auditLog.findMany({
+      where: { userId: req.user.sub },
+      orderBy: { createdAt: "desc" },
+      take: 50, // Limit to most recent 50 logs for performance
+      select: {
+        id: true,
+        action: true,
+        ipAddress: true,
+        deviceInfo: true,
+        status: true,
+        details: true,
+        createdAt: true,
+      }
+    });
+
+    res.json({ logs });
   } catch (error) {
     next(error);
   }

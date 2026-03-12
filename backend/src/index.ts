@@ -7,6 +7,8 @@ import cookieParser from "cookie-parser"; // Need to install this
 import authRouter from "./modules/auth/router.js";
 import oidcRouter from "./modules/oidc/router.js";
 import oauthRouter from "./modules/oauth/router.js";
+import adminRouter from "./modules/admin/router.js";
+import developerRouter from "./modules/developer/router.js";
 import prisma from "./db/client.js";
 
 dotenv.config();
@@ -80,6 +82,8 @@ app.get("/health", async (req, res) => {
 app.use("/api/v1/auth", authRouter);
 app.use("/auth", oidcRouter);
 app.use("/api/v1/oauth", oauthRouter);
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/user", developerRouter);
 
 // Global Error Handler
 app.use(errorHandler);

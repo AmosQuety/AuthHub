@@ -25,6 +25,7 @@ model User {
   roles          Role[]         @default([USER])
   sessions       Session[]
   authProviders  AuthProvider[]
+  ownedClients   OAuthClient[]
   mfaMethods     MfaMethod[]
   auditLogs      AuditLog[]
 
@@ -54,8 +55,10 @@ model OAuthClient {
   scopes            String[] @default([])
   name              String
   tenantId          String?  @map("tenant_id") @db.Uuid
+  ownerId           String?  @map("owner_id") @db.Uuid
   createdAt         DateTime @default(now()) @map("created_at")
   tenant            Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  owner             User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
 
   @@map("oauth_clients")
 }

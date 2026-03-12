@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, ApiError } from "../lib/api";
+import { useToast } from "../contexts/ToastContext";
 import { Mail, Lock, Loader2, ArrowRight } from "lucide-react";
 
 export default function Register() {
@@ -11,6 +12,7 @@ export default function Register() {
   const [error, setError] = useState("");
   
   const navigate = useNavigate();
+  const { success } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +35,8 @@ export default function Register() {
       
       // Navigate to login on successful creation
       // Note: Backend doesn't auto-login currently, it just returns 201
-      navigate("/login", { state: { message: "Account created successfully. Please log in." } });
+      success("Account created successfully. Please log in.");
+      navigate("/login");
     } catch (err: any) {
       if (err instanceof ApiError) {
         if (err.data?.details && Array.isArray(err.data.details)) {

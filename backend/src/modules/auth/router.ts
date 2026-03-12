@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, logout, me, refresh, revokeToken, introspectToken, sendVerificationEmail, verifyEmail, forgotPassword, resetPassword } from "./controller.js";
+import { register, login, logout, me, refresh, revokeToken, introspectToken, sendVerificationEmail, verifyEmail, forgotPassword, resetPassword, getSessions, deleteSession, getAuditLogs } from "./controller.js";
 import { googleLogin, googleCallback, githubLogin, githubCallback } from "./social.js";
 import mfaRouter from "../mfa/router.js";
 import passkeyRouter from "../passkey/router.js";
@@ -46,6 +46,9 @@ router.post("/logout", logout);
 
 // Protected
 router.get("/me", authenticate, me);
+router.get("/sessions", authenticate, getSessions);
+router.delete("/sessions/:id", authenticate, deleteSession);
+router.get("/audit-logs", authenticate, getAuditLogs);
 
 // --- EMAIL VERIFICATION ---
 // Send link (authenticated — user must be logged in to request their own verification)
