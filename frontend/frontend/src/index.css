@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand Colors */
+  --color-brand-primary: #6366f1; /* Indigo 500 */
+  --color-brand-primary-hover: #4f46e5; /* Indigo 600 */
+  --color-brand-surface: rgba(255, 255, 255, 0.03);
+  --color-brand-surface-hover: rgba(255, 255, 255, 0.08);
+  --color-brand-border: rgba(255, 255, 255, 0.1);
+  --color-brand-border-focus: rgba(99, 102, 241, 0.5);
+  
+  /* Radii */
+  --radius-card: 1.5rem;
+  --radius-button: 0.75rem;
+  --radius-input: 0.75rem;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-[#0B0C10] text-[#E0E2E6] font-sans antialiased min-h-screen flex items-center justify-center;
+    /* Soft ambient background gradient */
+    background-image: radial-gradient(circle at 50% -20%, rgba(99, 102, 241, 0.15), transparent 70%);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight text-white;
+  }
+}
+
+@layer components {
+  /* Glassmorphic Card Engine */
+  .glass-card {
+    @apply bg-brand-surface backdrop-blur-xl border border-brand-border rounded-[var(--radius-card)] shadow-2xl;
+  }
+
+  /* Premium Buttons */
+  .btn-primary {
+    @apply flex items-center justify-center gap-2 w-full px-4 py-3 bg-brand-primary hover:bg-brand-primary-hover text-white font-medium rounded-[var(--radius-button)] transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(99,102,241,0.3)];
+  }
+  
+  .btn-secondary {
+    @apply flex items-center justify-center gap-2 w-full px-4 py-3 bg-brand-surface hover:bg-brand-surface-hover text-white border border-brand-border font-medium rounded-[var(--radius-button)] transition-all duration-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Form Inputs */
+  .input-field {
+    @apply w-full px-4 py-3 bg-[#111216] border border-brand-border rounded-[var(--radius-input)] text-white placeholder-gray-500 focus:outline-none focus:border-brand-border-focus focus:ring-1 focus:ring-brand-border-focus transition-all duration-200;
+  }
+  
+  .input-label {
+    @apply block text-sm font-medium text-gray-400 mb-1.5;
+  }
+}

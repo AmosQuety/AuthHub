@@ -3,13 +3,17 @@ import * as jose from "jose";
 
 // --- Password Hashing ---
 
+// Optional pepper adds a server-side secret on top of argon2's own salt.
+// Prepended to the plain text so the DB hash is worthless without the secret.
+const PEPPER = process.env.ARGON2_PEPPER ?? "";
+
 export const hashPassword = async (password: string): Promise<string> => {
-  return await argon2.hash(password);
+  return await argon2.hash(PEPPER + password);
 };
 
 export const verifyPassword = async (hash: string, plain: string): Promise<boolean> => {
   try {
-    return await argon2.verify(hash, plain);
+    return await argon2.verify(hash, PEPPER + plain);
   } catch (err) {
     return false;
   }
@@ -17,9 +21,8 @@ export const verifyPassword = async (hash: string, plain: string): Promise<boole
 
 // --- JWT (RS256) ---
 
-// Ensure keys are present in environment
-const privateKeyPem = process.env.JWT_PRIVATE_KEY;
-const publicKeyPem = process.env.JWT_PUBLIC_KEY;
+const privateKeyPem = process.env.JWT_PRIVATE_KEY?.replace(/\\n/g, "\n");
+const publicKeyPem = process.env.JWT_PUBLIC_KEY?.replace(/\\n/g, "\n");
 
 let privateKey: jose.KeyLike | null = null;
 let publicKey: jose.KeyLike | null = null;
@@ -31,7 +34,6 @@ const getPrivateKey = async () => {
   return privateKey;
 };
 
-// Exported for verify if needed elsewhere, though usually verify uses public key
 export const getPublicKey = async () => {
   if (publicKey) return publicKey;
   if (!publicKeyPem) throw new Error("JWT_PUBLIC_KEY is not defined");
@@ -44,17 +46,28 @@ export const getPublicJwk = async () => {
   return await jose.exportJWK(key);
 };
 
-export const generateTokens = async (userId: string) => {
+// Generates a short-lived access token and a rotating refresh token.
+// The refresh token embeds the sessionId so logout can target a single session.
+export const generateTokens = async (userId: string, sessionId: string, scopes: string[] = [], roles: string[] = ["USER"]) => {
   const key = await getPrivateKey();
+  const issuer = process.env.BASE_URL || "http://localhost:3000";
 
-  const accessToken = await new jose.SignJWT({ sub: userId })
-    .setProtectedHeader({ alg: "RS256" })
+  const accessPayload: any = { sub: userId, roles };
+  if (scopes.length > 0) {
+    accessPayload.scopes = scopes;
+  }
+
+  const accessToken = await new jose.SignJWT(accessPayload)
+    .setProtectedHeader({ alg: "RS256", kid: "authhub-key-1" })
+    .setIssuer(issuer)
     .setIssuedAt()
+    .setJti(crypto.randomUUID())
     .setExpirationTime("15m")
     .sign(key);
 
-  const refreshToken = await new jose.SignJWT({ sub: userId, type: "refresh" })
-    .setProtectedHeader({ alg: "RS256" })
+  const refreshToken = await new jose.SignJWT({ sub: userId, sid: sessionId, type: "refresh" })
+    .setProtectedHeader({ alg: "RS256", kid: "authhub-key-1" })
+    .setIssuer(issuer)
     .setIssuedAt()
     .setExpirationTime("7d")
     .sign(key);
@@ -63,40 +76,75 @@ export const generateTokens = async (userId: string) => {
 };
 
 export const verifyToken = async (token: string) => {
-    const key = await getPublicKey();
-    const { payload } = await jose.jwtVerify(token, key);
-    return payload;
-}
+  const key = await getPublicKey();
+  const { payload } = await jose.jwtVerify(token, key);
+  return payload;
+};
 
-// --- PKCE & ID Token ---
+// --- PKCE ---
 
 export const verifyPkceChallenge = async (verifier: string, challenge: string): Promise<boolean> => {
-  // S256: SHA-256 hash of the code verifier, then Base64URL encoded
   const encoder = new TextEncoder();
   const data = encoder.encode(verifier);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  // Base64URL encode
   const base64Url = btoa(String.fromCharCode(...hashArray))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
-  
   return base64Url === challenge;
 };
 
-export const generateIdToken = async (userId: string, clientId: string, nonce?: string) => {
+// --- ID Token (OIDC) ---
+
+export const generateIdToken = async (
+  userId: string,
+  clientId: string,
+  nonce?: string,
+  userProfile?: { email?: string; emailVerified?: boolean;[key: string]: any },
+  scopes: string[] = []
+) => {
   const key = await getPrivateKey();
-  
-  const jwt = new jose.SignJWT({
+  const issuer = process.env.BASE_URL || "http://localhost:3000";
+
+  const payload: any = {
     sub: userId,
     aud: clientId,
-    iss: process.env.BASE_URL || "http://localhost:3000",
-    nonce: nonce,
-  })
-    .setProtectedHeader({ alg: "RS256" })
+    iss: issuer,
+    ...(nonce ? { nonce } : {}),
+  };
+
+  if (scopes.includes("email") && userProfile) {
+    payload.email = userProfile.email;
+    payload.email_verified = userProfile.emailVerified;
+  }
+
+  const jwt = new jose.SignJWT(payload)
+    .setProtectedHeader({ alg: "RS256", kid: "authhub-key-1" })
     .setIssuedAt()
     .setExpirationTime("1h");
 
   return await jwt.sign(key);
+};
+
+// --- MFA Tokens ---
+
+export const generateMfaToken = async (userId: string) => {
+  const key = await getPrivateKey();
+  const issuer = process.env.BASE_URL || "http://localhost:3000";
+
+  return await new jose.SignJWT({ sub: userId, type: "mfa_pending" })
+    .setProtectedHeader({ alg: "RS256", kid: "authhub-key-1" })
+    .setIssuer(issuer)
+    .setIssuedAt()
+    .setExpirationTime("5m") // Very short-lived
+    .sign(key);
+};
+
+export const verifyMfaToken = async (token: string) => {
+  const payload = await verifyToken(token);
+  if (payload.type !== "mfa_pending") {
+    throw new Error("Invalid token type");
+  }
+  return payload;
 };

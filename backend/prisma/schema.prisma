@@ -3,18 +3,30 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // DATABASE_URL → Supabase connection pooler (port 6543, transaction mode) — used at runtime
+  url       = env("DATABASE_URL")
+  // DIRECT_URL → Supabase direct connection (port 5432) — used by prisma migrate
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 model User {
-  id             String    @id @default(uuid()) @db.Uuid
-  email          String    @unique
-  passwordHash   String    @map("password_hash")
-  emailVerified  Boolean   @default(false) @map("email_verified")
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id             String         @id @default(uuid()) @db.Uuid
+  email          String         @unique
+  passwordHash   String?        @map("password_hash") // Optional for social login
+  emailVerified  Boolean        @default(false) @map("email_verified")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  roles          Role[]         @default([USER])
   sessions       Session[]
+  authProviders  AuthProvider[]
+  mfaMethods     MfaMethod[]
+  auditLogs      AuditLog[]
 
   @@map("users")
 }
@@ -24,6 +36,9 @@ model Session {
   userId            String   @db.Uuid @map("user_id")
   refreshTokenHash  String   @map("refresh_token_hash")
   deviceInfo        String?  @map("device_info")
+  ipAddress         String?  @map("ip_address")
+  familyId          String?  @map("family_id") // For refresh token sliding window/revocation
+  riskScore         Int?     @map("risk_score") // Track risk of the login event
   expiresAt         DateTime @map("expires_at")
   createdAt         DateTime @default(now()) @map("created_at")
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -34,9 +49,70 @@ model Session {
 model OAuthClient {
   clientId          String   @id @map("client_id")
   clientSecretHash  String   @map("client_secret_hash")
-  redirectUris     String[] @map("redirect_uris")
+  isPublic          Boolean  @default(false) @map("is_public")
+  redirectUris      String[] @map("redirect_uris")
+  scopes            String[] @default([])
   name              String
+  tenantId          String?  @map("tenant_id") @db.Uuid
   createdAt         DateTime @default(now()) @map("created_at")
+  tenant            Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@map("oauth_clients")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @db.Uuid @map("user_id") // Optional because anonymous actions (failed logins) still generate logs
+  action    String   // e.g., "LOGIN_SUCCESS", "LOGIN_FAILED", "MFA_ENABLED", "PASSWORD_RESET"
+  ipAddress String?  @map("ip_address")
+  deviceInfo String? @map("device_info")
+  status    String   // "SUCCESS", "FAILURE", "BLOCKED"
+  details   Json?    // Extra contextual metadata
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model AuthProvider {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid @map("user_id")
+  provider      String   // "google", "github", "apple"
+  providerId    String   @map("provider_id") // ID from the third party
+  providerEmail String?  @map("provider_email")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@map("auth_providers")
+}
+
+model MfaMethod {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid @map("user_id")
+  type      String   // "totp", "webauthn"
+  secret    String   // TOTP secret or WebAuthn public key/credential ID
+  enabled   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("mfa_methods")
+}
+
+model Tenant {
+  id            String        @id @default(uuid()) @db.Uuid
+  name          String
+  logoUrl       String?       @map("logo_url")
+  primaryColor  String?       @map("primary_color")
+  authPolicyId  String?       @map("auth_policy_id")
+  requireMfa    Boolean       @default(false) @map("require_mfa")
+  allowPasskeys Boolean       @default(true)  @map("allow_passkeys")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  clients       OAuthClient[]
+
+  @@map("tenants")
 }
