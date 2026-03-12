@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createClient, listClients, deleteClient } from "./controller.js";
+import { createClient, listClients, deleteClient, listUsers, deleteUser } from "./controller.js";
 import { authenticate } from "../../middlewares/authenticate.js";
 import { requireRole } from "../../middlewares/requireRole.js";
 
@@ -13,5 +13,9 @@ router.use(requireRole("ADMIN"));
 router.get("/clients", listClients);
 router.post("/clients", createClient);
 router.delete("/clients/:id", deleteClient);
+
+// --- User Management ---
+router.get("/users", listUsers);
+router.delete("/users/:id", deleteUser);
 
 export default router;

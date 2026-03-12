@@ -6,6 +6,7 @@ interface UserProfile {
   id: string;
   email: string;
   emailVerified: boolean;
+  roles?: string[];
   createdAt: string;
 }
 
