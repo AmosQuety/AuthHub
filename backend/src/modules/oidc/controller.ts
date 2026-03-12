@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import prisma from "../../db/client.js";
 import { getPublicJwk } from "../../core/crypto.js";
 
 export const getJwks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -17,9 +18,9 @@ export const getOpenIdConfiguration = (req: Request, res: Response): void => {
   // Minimal OIDC metadata
   const config = {
     issuer: baseUrl,
-    authorization_endpoint: `${baseUrl}/api/v1/auth/authorize`, // Placeholder for future
-    token_endpoint: `${baseUrl}/api/v1/auth/token`, // Placeholder for future
-    userinfo_endpoint: `${baseUrl}/api/v1/auth/me`,
+    authorization_endpoint: `${baseUrl}/api/v1/oauth/authorize`,
+    token_endpoint: `${baseUrl}/api/v1/oauth/token`,
+    userinfo_endpoint: `${baseUrl}/auth/userinfo`,
     jwks_uri: `${baseUrl}/auth/.well-known/jwks.json`,
     response_types_supported: ["code", "token", "id_token"],
     subject_types_supported: ["public"],
@@ -30,4 +31,32 @@ export const getOpenIdConfiguration = (req: Request, res: Response): void => {
   };
 
   res.json(config);
+};
+
+export const userinfo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.user?.sub;
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, emailVerified: true },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.json({
+      sub: user.id,
+      email: user.email,
+      email_verified: user.emailVerified,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
