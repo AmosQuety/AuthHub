@@ -9,6 +9,9 @@ export default function Authorize() {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // New state: initially true so we don't flash the consent screen if it's going to be auto-skipped
+  const [checkingConsent, setCheckingConsent] = useState(true);
 
   // Extract OAuth Parameters
   const clientId = searchParams.get("client_id");
@@ -23,6 +26,7 @@ export default function Authorize() {
   useEffect(() => {
     if (!clientId || !redirectUri || responseType !== "code") {
       setError("Invalid OAuth 2.0 authorization request. Missing or unsupported parameters.");
+      setCheckingConsent(false);
     }
   }, [clientId, redirectUri, responseType]);
 
@@ -60,18 +64,62 @@ export default function Authorize() {
         // Important: Use vanilla window.location to redirect the browser to the third-party client
         window.location.href = response.redirectUrl;
       } else {
-        setError("Invalid response from authorization server.");
+        throw new Error("Authorization server did not return a redirect URL.");
       }
     } catch (err: any) {
-      if (err instanceof ApiError) {
-        setError(err.message);
-      } else {
-        setError("Failed to generate authorization code.");
-      }
-    } finally {
+      console.error(err);
+      setError(err?.data?.error_description || err?.data?.error || err.message || "Failed to authorize client");
       setIsLoading(false);
+      setCheckingConsent(false);
     }
   };
+
+  // Check Single Sign-On (SSO) Consent Bypass
+  useEffect(() => {
+    // Only check if parameters are valid and user is logged in
+    if (!user || !clientId || !redirectUri || responseType !== "code") return;
+
+    let mounted = true;
+
+    const checkExistingConsent = async () => {
+      try {
+        const res = await api.get(`/oauth/consent-check?client_id=${clientId}&scope=${scope || ''}`);
+        if (mounted) {
+          if (res.consentRequired === false) {
+            console.log('[AuthHub] Consent previously granted. Auto-approving login...');
+            // Automatically grant access, bypassing UI
+            await handleConsent(true);
+          } else {
+            // Need to show UI
+            setCheckingConsent(false);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check consent status. Falling back to manual consent UI.", err);
+        if (mounted) setCheckingConsent(false);
+      }
+    };
+
+    checkExistingConsent();
+
+    return () => { mounted = false; };
+  }, [user, clientId, redirectUri, responseType, scope]);
+
+  // While checking or processing auto-login, show loading state exclusively
+  if (checkingConsent || isLoading) {
+    return (
+      <div className="min-h-screen bg-black text-slate-200 font-sans flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Glow Effects */}
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-violet-600/20 blur-[100px] pointer-events-none" />
+
+        <div className="max-w-md w-full relative z-10 flex flex-col items-center justify-center text-center">
+           <Loader2 className="w-10 h-10 text-indigo-400 animate-spin mb-4" />
+           <p className="text-slate-400 font-medium pb-24">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (

@@ -10,6 +10,8 @@ import oauthRouter from "./modules/oauth/router.js";
 import adminRouter from "./modules/admin/router.js";
 import developerRouter from "./modules/developer/router.js";
 import prisma from "./db/client.js";
+import cron from "node-cron";
+import { runKeepAlive } from "./db/keep-alive.js";
 
 dotenv.config();
 
@@ -92,6 +94,15 @@ app.use(errorHandler);
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT as number, "0.0.0.0", () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
+    
+    // Database & Redis Keep-Alive (every 6 hours)
+    // 0 */6 * * *
+    cron.schedule("0 */6 * * *", () => {
+       runKeepAlive();
+    });
+
+    // Run first ping immediately on start
+    runKeepAlive();
   });
 }
 
