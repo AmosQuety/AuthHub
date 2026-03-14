@@ -28,6 +28,7 @@ model User {
   ownedClients   OAuthClient[]
   mfaMethods     MfaMethod[]
   auditLogs      AuditLog[]
+  consents       UserConsent[]
 
   @@map("users")
 }
@@ -59,6 +60,7 @@ model OAuthClient {
   createdAt         DateTime @default(now()) @map("created_at")
   tenant            Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   owner             User?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  userConsents      UserConsent[]
 
   @@map("oauth_clients")
 }
@@ -118,4 +120,20 @@ model Tenant {
   clients       OAuthClient[]
 
   @@map("tenants")
+}
+
+model UserConsent {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid @map("user_id")
+  clientId  String   @map("client_id")
+  scopes    String[] @default([])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client OAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+
+  // A user can only have one consent record per application
+  @@unique([userId, clientId])
+  @@map("user_consents")
 }

@@ -11,4 +11,7 @@ router.post("/authorize", authenticate, authorize);
 // Token endpoint - public (machine-to-machine / back-channel)
 router.post("/token", token);
 
+// Check if a user has already granted the requested scopes to an app
+router.get("/consent-check", authenticate, checkConsent);
+
 export default router;

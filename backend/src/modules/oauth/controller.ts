@@ -4,6 +4,55 @@ import prisma from "../../db/client.js";
 import redis from "../../db/redis.js";
 import { verifyPkceChallenge, generateTokens, generateIdToken, verifyPassword, hashPassword, verifyToken } from "../../core/crypto.js";
 
+// Helper to check if array current contains all elements of required
+const hasAllScopes = (current: string[], required: string[]) => {
+  return required.every(scope => current.includes(scope));
+};
+
+export const checkConsent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { client_id, scope } = req.query;
+
+    if (!req.user || !req.user.sub) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    if (!client_id) {
+      res.status(400).json({ error: "invalid_request", error_description: "client_id is required" });
+      return;
+    }
+
+    const requestedScopes = scope ? String(scope).split(" ") : [];
+
+    // Look for previous consent
+    const consent = await prisma.userConsent.findUnique({
+      where: {
+        userId_clientId: {
+          userId: req.user.sub,
+          clientId: String(client_id),
+        }
+      }
+    });
+
+    if (!consent) {
+      // Never consented to this app before
+      res.json({ consentRequired: true });
+      return;
+    }
+
+    // Check if the previously granted scopes cover all the newly requested scopes
+    if (hasAllScopes(consent.scopes, requestedScopes)) {
+      res.json({ consentRequired: false, previouslyGrantedScopes: consent.scopes });
+    } else {
+      // User consented before, but this request asks for MORE scopes than before
+      res.json({ consentRequired: true });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const authorize = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // We expect the frontend consent screen to POST these params
@@ -41,6 +90,43 @@ export const authorize = async (req: Request, res: Response, next: NextFunction)
     if (!client.redirectUris.includes(String(redirect_uri))) {
       res.status(400).json({ error: "invalid_request", error_description: "Invalid redirect_uri" });
       return;
+    }
+
+    // IMPORTANT: Actually save the consent into the database if not already tracked
+    const requestedScopes = scope ? String(scope).split(" ") : [];
+    
+    // We use upsert so if a consent record exists, we just update the scopes to include the new ones
+    await prisma.userConsent.upsert({
+      where: {
+        userId_clientId: {
+          userId: req.user.sub,
+          clientId: client.clientId,
+        }
+      },
+      create: {
+        userId: req.user.sub,
+        clientId: client.clientId,
+        scopes: requestedScopes,
+      },
+      update: {
+        scopes: {
+          push: requestedScopes, // Prisma push into array (PostgreSQL specific, but fits here)
+        }
+      }
+    });
+
+    // Clean up duplicate scopes array if push creates duplicates
+    const finalConsent = await prisma.userConsent.findUnique({
+      where: { userId_clientId: { userId: req.user.sub, clientId: client.clientId } }
+    });
+    if (finalConsent) {
+      const uniqueScopes = Array.from(new Set(finalConsent.scopes));
+      if (uniqueScopes.length !== finalConsent.scopes.length) {
+        await prisma.userConsent.update({
+          where: { id: finalConsent.id },
+          data: { scopes: uniqueScopes }
+        });
+      }
     }
 
     // Generate Authorization Code
