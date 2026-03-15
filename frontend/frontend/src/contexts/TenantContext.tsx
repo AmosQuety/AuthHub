@@ -3,7 +3,7 @@
 // Downstream applications send a `?tenant=<id>` query param to AuthHub's login URL
 // to trigger white-labeling for their brand.
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 interface TenantBranding {
   id: string;
