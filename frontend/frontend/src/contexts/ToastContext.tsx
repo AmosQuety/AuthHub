@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'info';
@@ -45,20 +45,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-md animate-in slide-in-from-bottom-5 fade-in duration-300 ${
-              toast.type === 'success' ? 'bg-green-500/90 border-green-500/20 text-white' :
-              toast.type === 'error' ? 'bg-red-500/90 border-red-500/20 text-white' :
-              'bg-blue-500/90 border-blue-500/20 text-white'
-            }`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-md animate-in slide-in-from-bottom-5 fade-in duration-300 ${toast.type === 'success' ? 'bg-green-500/90 border-green-500/20 text-white' :
+                toast.type === 'error' ? 'bg-red-500/90 border-red-500/20 text-white' :
+                  'bg-blue-500/90 border-blue-500/20 text-white'
+              }`}
           >
             {toast.type === 'success' && <CheckCircle className="w-5 h-5" />}
             {toast.type === 'error' && <AlertCircle className="w-5 h-5" />}
             {toast.type === 'info' && <Info className="w-5 h-5" />}
-            
+
             <span className="text-sm font-medium">{toast.message}</span>
-            
-            <button 
-              onClick={() => removeToast(toast.id)} 
+
+            <button
+              onClick={() => removeToast(toast.id)}
               className="ml-auto p-1 hover:bg-white/20 rounded-lg transition-colors"
             >
               <X className="w-4 h-4" />
