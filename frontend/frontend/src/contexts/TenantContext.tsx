@@ -4,6 +4,7 @@
 // to trigger white-labeling for their brand.
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { api } from "../lib/api";
 
 interface TenantBranding {
   id: string;
@@ -77,26 +78,28 @@ function resetTenantTheme() {
   document.title = "AuthHub";
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenant, setTenant] = useState<TenantBranding | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Downstream apps pass ?tenant=<tenantId> when redirecting to AuthHub
     const params = new URLSearchParams(window.location.search);
     const tenantId = params.get("tenant");
+    const clientId = params.get("client_id");
 
-    if (!tenantId) {
+    if (!tenantId && !clientId) {
       resetTenantTheme();
       return;
     }
 
     setIsLoading(true);
 
-    fetch(`${API_URL}/auth/tenant/${encodeURIComponent(tenantId)}/config`)
-      .then(res => res.ok ? res.json() : Promise.reject(res))
+    const endpoint = clientId 
+      ? `/tenant/config?client_id=${encodeURIComponent(clientId)}`
+      : `/tenant/${encodeURIComponent(tenantId!)}/config`;
+
+    api.get(endpoint)
       .then(data => {
         if (data.tenant) {
           setTenant(data.tenant);
@@ -104,7 +107,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch(() => {
-        // Unknown tenant — silently use default AuthHub branding
+        // Unknown tenant/client — silently use default AuthHub branding
         resetTenantTheme();
       })
       .finally(() => setIsLoading(false));

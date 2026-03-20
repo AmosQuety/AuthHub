@@ -3,33 +3,40 @@ import prisma from "../../db/client.js";
 
 export const getTenantConfig = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const tenantId = req.params.tenantId as string;
+        const { tenantId } = req.params;
+        const { client_id } = req.query;
 
         let tenant;
-        
-        if (tenantId === "default") {
-          tenant = await prisma.tenant.findFirst({
-            select: {
-                id: true,
-                name: true,
-                logoUrl: true,
-                primaryColor: true,
-                requireMfa: true,
-                allowPasskeys: true,
-            }
-          });
-        } else {
-          tenant = await prisma.tenant.findUnique({
-              where: { id: tenantId },
-              select: {
-                  id: true,
-                  name: true,
-                  logoUrl: true,
-                  primaryColor: true,
-                  requireMfa: true,
-                  allowPasskeys: true,
-              }
-          });
+        const select = {
+            id: true,
+            name: true,
+            logoUrl: true,
+            primaryColor: true,
+            requireMfa: true,
+            allowPasskeys: true,
+            customDomain: true,
+        };
+
+        // 1. Resolve by client_id query param (Standard OAuth flow)
+        if (client_id && typeof client_id === "string") {
+            tenant = await prisma.tenant.findUnique({
+                where: { clientId: client_id },
+                select
+            });
+        } 
+        // 2. Resolve by 'default' keyword
+        else if (tenantId === "default") {
+            tenant = await prisma.tenant.findFirst({
+                orderBy: { createdAt: "asc" },
+                select
+            });
+        }
+        // 3. Resolve by UUID id
+        else if (tenantId) {
+            tenant = await prisma.tenant.findUnique({
+                where: { id: tenantId },
+                select
+            });
         }
 
         if (!tenant) {

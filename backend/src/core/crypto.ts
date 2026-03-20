@@ -1,5 +1,6 @@
 import argon2 from "argon2";
 import * as jose from "jose";
+import prisma from "../db/client.js";
 
 // --- Password Hashing ---
 
@@ -41,34 +42,68 @@ export const getPublicKey = async () => {
   return publicKey;
 };
 
+// Computes a stable, deterministic kid from the public key's JWK thumbprint (RFC 7638).
+// This ensures the kid in the JWKS response always matches the kid embedded in issued JWTs.
+let _kidCache: string | null = null;
+export const getKeyId = async (): Promise<string> => {
+  if (_kidCache) return _kidCache;
+  const key = await getPublicKey();
+  const thumbprint = await jose.calculateJwkThumbprint(await jose.exportJWK(key), "sha256");
+  _kidCache = thumbprint;
+  return thumbprint;
+};
+
 export const getPublicJwk = async () => {
   const key = await getPublicKey();
-  return await jose.exportJWK(key);
+  const jwk = await jose.exportJWK(key);
+  const kid = await getKeyId();
+  return { ...jwk, kid };
 };
 
 // Generates a short-lived access token and a rotating refresh token.
 // The refresh token embeds the sessionId so logout can target a single session.
-export const generateTokens = async (userId: string, sessionId: string, scopes: string[] = [], roles: string[] = ["USER"]) => {
+export const generateTokens = async (userId: string, sessionId: string, scopes: string[] = [], roles: string[] = ["USER"], impersonatorId?: string) => {
   const key = await getPrivateKey();
+  const kid = await getKeyId();
   const issuer = process.env.BASE_URL || "http://localhost:3000";
 
+  // Feature 1: Entitlement Sync. Automatically append active billing plans to scopes.
+  const entitlements = await prisma.entitlement.findMany({
+    where: { userId, status: "active" },
+    select: { planId: true }
+  });
+  
+  const activePlanScopes = entitlements.map((e: any) => e.planId);
+  const finalScopes = Array.from(new Set([...scopes, ...activePlanScopes]));
+
   const accessPayload: any = { sub: userId, roles };
-  if (scopes.length > 0) {
-    accessPayload.scopes = scopes;
+  if (finalScopes.length > 0) {
+    accessPayload.scopes = finalScopes;
+  }
+  
+  if (impersonatorId) {
+    // RFC 8693 standard 'act' (Actor) claim
+    accessPayload.act = { sub: impersonatorId };
   }
 
   const accessToken = await new jose.SignJWT(accessPayload)
-    .setProtectedHeader({ alg: "RS256", kid: "authhub-key-1" })
+    .setProtectedHeader({ alg: "RS256", kid })
     .setIssuer(issuer)
     .setIssuedAt()
     .setJti(crypto.randomUUID())
-    .setExpirationTime("15m")
+    .setExpirationTime(impersonatorId ? "15m" : "15m") // 15m absolute max for impersonation
     .sign(key);
 
+  if (impersonatorId) {
+    // Impersonation sessions explicitly do NOT get a refresh token!
+    return { accessToken, refreshToken: "" };
+  }
+
   const refreshToken = await new jose.SignJWT({ sub: userId, sid: sessionId, type: "refresh" })
-    .setProtectedHeader({ alg: "RS256", kid: "authhub-key-1" })
+    .setProtectedHeader({ alg: "RS256", kid })
     .setIssuer(issuer)
     .setIssuedAt()
+    .setJti(crypto.randomUUID())
     .setExpirationTime("7d")
     .sign(key);
 
@@ -105,6 +140,7 @@ export const generateIdToken = async (
   scopes: string[] = []
 ) => {
   const key = await getPrivateKey();
+  const kid = await getKeyId();
   const issuer = process.env.BASE_URL || "http://localhost:3000";
 
   const payload: any = {
@@ -120,7 +156,7 @@ export const generateIdToken = async (
   }
 
   const jwt = new jose.SignJWT(payload)
-    .setProtectedHeader({ alg: "RS256", kid: "authhub-key-1" })
+    .setProtectedHeader({ alg: "RS256", kid })
     .setIssuedAt()
     .setExpirationTime("1h");
 
@@ -131,10 +167,11 @@ export const generateIdToken = async (
 
 export const generateMfaToken = async (userId: string) => {
   const key = await getPrivateKey();
+  const kid = await getKeyId();
   const issuer = process.env.BASE_URL || "http://localhost:3000";
 
   return await new jose.SignJWT({ sub: userId, type: "mfa_pending" })
-    .setProtectedHeader({ alg: "RS256", kid: "authhub-key-1" })
+    .setProtectedHeader({ alg: "RS256", kid })
     .setIssuer(issuer)
     .setIssuedAt()
     .setExpirationTime("5m") // Very short-lived

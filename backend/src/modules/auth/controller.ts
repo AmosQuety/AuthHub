@@ -8,15 +8,27 @@ import { BruteForceService } from "../../middlewares/rateLimiter.js";
 
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { email, password, client_id } = req.body;
 
     if (!email || !password) {
       res.status(400).json({ error: "Email and password are required" });
       return;
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    // Resolve tenant from client_id if provided
+    let tenantId: string | null = null;
+    if (client_id) {
+      const tenant = await prisma.tenant.findUnique({ where: { clientId: client_id }, select: { id: true } });
+      if (!tenant) {
+        res.status(400).json({ error: "Unknown client_id" });
+        return;
+      }
+      tenantId = tenant.id;
+    }
+
+    // Check for existing user scoped to this tenant
+    const existingUser = await prisma.user.findFirst({
+      where: { email, tenantId },
     });
 
     if (existingUser) {
@@ -30,6 +42,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       data: {
         email,
         passwordHash,
+        ...(tenantId ? { tenantId } : {}),
       },
     });
 
@@ -51,6 +64,13 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       return;
     }
 
+    // Resolve tenant from client_id if provided
+    let tenantId: string | null = null;
+    if (req.body.client_id) {
+      const tenant = await prisma.tenant.findUnique({ where: { clientId: req.body.client_id }, select: { id: true } });
+      if (tenant) tenantId = tenant.id;
+    }
+
     // --- Brute-Force Lockout Check ---
     const lockout = await BruteForceService.getLockout(email);
     if (lockout) {
@@ -62,8 +82,8 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       return;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
+    const user = await prisma.user.findFirst({
+      where: { email, tenantId },
     });
 
     if (!user || !user.passwordHash) {
@@ -578,7 +598,15 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     }
 
     // Always respond 200 — do NOT reveal if the email exists
-    const user = await prisma.user.findUnique({ where: { email } });
+    // Resolve tenant context for scoped lookup
+    const client_id = req.body.client_id as string | undefined;
+    let tenantId: string | null = null;
+    if (client_id) {
+      const tenant = await prisma.tenant.findUnique({ where: { clientId: client_id }, select: { id: true } });
+      if (tenant) tenantId = tenant.id;
+    }
+
+    const user = await prisma.user.findFirst({ where: { email, tenantId } });
     if (!user) {
       res.json({ message: "If that email exists, a reset link has been sent." });
       return;

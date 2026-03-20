@@ -20,6 +20,7 @@ import { AdminRoute } from "./components/AdminRoute";
 import AdminClients from "./pages/admin/AdminClients";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTenantConfig from "./pages/admin/AdminTenantConfig";
+import AdminObservability from "./pages/admin/AdminObservability";
 
 export default function App() {
   return (
@@ -55,9 +56,10 @@ export default function App() {
 
           {/* Admin Console — requires ADMIN role */}
           <Route element={<AdminRoute />}>
-            <Route path="/admin/clients" element={<AdminClients />} />
             <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/tenant" element={<AdminTenantConfig />} />
+            <Route path="/admin/clients" element={<AdminClients />} />
+            <Route path="/admin/tenants/:id" element={<AdminTenantConfig />} />
+            <Route path="/admin/observability" element={<AdminObservability />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

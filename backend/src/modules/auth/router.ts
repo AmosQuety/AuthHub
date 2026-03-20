@@ -7,14 +7,15 @@ import adminRouter from "../admin/router.js";
 import tenantRouter from "../tenant/router.js";
 import { authenticate } from "../../middlewares/authenticate.js";
 import { validate } from "../../middlewares/validate.js";
-import { authLimiter, refreshLimiter } from "../../middlewares/rateLimiter.js";
+import { loginLimiter, registerLimiter, refreshLimiter, authLimiter } from "../../middlewares/rateLimiter.js";
 import { registerSchema, loginSchema } from "./schema.js";
 
 const router = Router();
 
 // Rate limited & Input Validated
-router.post("/register", validate(registerSchema), register);
-router.post("/login", validate(loginSchema), login);
+router.post("/register", registerLimiter, validate(registerSchema), register);
+router.post("/login", loginLimiter, validate(loginSchema), login);
+
 
 // Token rotation
 router.post("/refresh", refreshLimiter, refresh);

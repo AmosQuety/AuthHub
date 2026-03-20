@@ -103,5 +103,6 @@ export const api = {
   get: (endpoint: string, customConfig: FetchOptions = {}) => fetchClient(endpoint, { ...customConfig, method: 'GET' }),
   post: (endpoint: string, data?: any, customConfig: FetchOptions = {}) => fetchClient(endpoint, { ...customConfig, data, method: 'POST' }),
   put: (endpoint: string, data?: any, customConfig: FetchOptions = {}) => fetchClient(endpoint, { ...customConfig, data, method: 'PUT' }),
+  patch: (endpoint: string, data?: any, customConfig: FetchOptions = {}) => fetchClient(endpoint, { ...customConfig, data, method: 'PATCH' }),
   delete: (endpoint: string, customConfig: FetchOptions = {}) => fetchClient(endpoint, { ...customConfig, method: 'DELETE' }),
 };
