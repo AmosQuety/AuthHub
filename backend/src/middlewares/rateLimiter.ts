@@ -11,9 +11,44 @@ export const authLimiter = rateLimit({
     legacyHeaders: false,
     store: new RedisStore({
         sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
+        prefix: "rl:auth:",
     }),
     message: {
         error: "Too many login/registration attempts, please try again after 15 minutes.",
+    },
+});
+
+// Targeted login limiter — skips counting on success so only failed attempts
+// count towards lockout. 10 attempts per 15 min per IP.
+export const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: true,
+    store: new RedisStore({
+        sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
+        prefix: "rl:login:",
+    }),
+    handler: (_req, res) => res.status(429).json({
+        error: "too_many_attempts",
+        message: "Too many login attempts. Try again in 15 minutes.",
+    }),
+});
+
+// Soft limiter for register endpoint
+// 5 registrations per hour per IP
+export const registerLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    store: new RedisStore({
+        sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
+        prefix: "rl:register:",
+    }),
+    message: {
+        error: "Too many registration attempts. Please try again in an hour.",
     },
 });
 
@@ -26,9 +61,25 @@ export const refreshLimiter = rateLimit({
     legacyHeaders: false,
     store: new RedisStore({
         sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
+        prefix: "rl:refresh:",
     }),
     message: {
         error: "Too many token refresh attempts, please try again later.",
+    },
+});
+
+// OAuth /token endpoint limiter — 20 req/min per IP
+export const tokenLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    store: new RedisStore({
+        sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
+        prefix: "rl:token:",
+    }),
+    message: {
+        error: "Too many token requests. Please slow down.",
     },
 });
 

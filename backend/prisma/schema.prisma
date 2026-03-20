@@ -17,19 +17,24 @@ enum Role {
 
 model User {
   id             String         @id @default(uuid()) @db.Uuid
-  email          String         @unique
+  email          String
   passwordHash   String?        @map("password_hash") // Optional for social login
   emailVerified  Boolean        @default(false) @map("email_verified")
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
   roles          Role[]         @default([USER])
+  tenantId       String?        @map("tenant_id") @db.Uuid
   sessions       Session[]
   authProviders  AuthProvider[]
   ownedClients   OAuthClient[]
   mfaMethods     MfaMethod[]
   auditLogs      AuditLog[]
   consents       UserConsent[]
+  entitlements   Entitlement[]
+  tenant         Tenant?        @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
+  // Email unique per tenant — Alice can have separate accounts across different apps
+  @@unique([email, tenantId])
   @@map("users")
 }
 
@@ -111,13 +116,25 @@ model MfaMethod {
 model Tenant {
   id            String        @id @default(uuid()) @db.Uuid
   name          String
+  clientId      String?       @unique @map("client_id")       // e.g. 'xemora_aB3kP9mNqR'
+  customDomain  String?       @unique @map("custom_domain")   // e.g. 'auth.xemora.com'
   logoUrl       String?       @map("logo_url")
   primaryColor  String?       @map("primary_color")
   authPolicyId  String?       @map("auth_policy_id")
   requireMfa    Boolean       @default(false) @map("require_mfa")
   allowPasskeys Boolean       @default(true)  @map("allow_passkeys")
+  // White-label SMTP — per-tenant transactional email config
+  smtpHost      String?       @map("smtp_host")
+  smtpPort      Int?          @map("smtp_port")
+  smtpUser      String?       @map("smtp_user")
+  smtpPassHash  String?       @map("smtp_pass_hash")          // stored encrypted, never plaintext
+  emailFrom     String?       @map("email_from")              // e.g. 'noreply@xemora.com'
+  // White-label webhook
+  webhookUrl    String?       @map("webhook_url")
+  webhookSecret String?       @map("webhook_secret")
   createdAt     DateTime      @default(now()) @map("created_at")
   clients       OAuthClient[]
+  users         User[]
 
   @@map("tenants")
 }
@@ -137,3 +154,21 @@ model UserConsent {
   @@unique([userId, clientId])
   @@map("user_consents")
 }
+
+model Entitlement {
+  id                     String   @id @default(uuid()) @db.Uuid
+  userId                 String   @db.Uuid @map("user_id")
+  provider               String   // e.g., 'stripe', 'paddle', 'custom'
+  providerSubscriptionId String   @unique @map("provider_subscription_id")
+  planId                 String   @map("plan_id") // e.g., 'pro_plan' or external product ID
+  status                 String   // 'active', 'canceled', 'past_due'
+  currentPeriodEnd       DateTime @map("current_period_end")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A user can have multiple active entitlements (e.g., 'pro_plan' + 'ai_addon')
+  @@map("entitlements")
+}
+

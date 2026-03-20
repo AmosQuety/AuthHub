@@ -12,8 +12,12 @@ export const googleLogin = (req: Request, res: Response) => {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     if (!clientId) return res.status(500).json({ error: "Google OAuth not configured" });
 
+    // Pass the AuthHub client_id and mode in the state so we know the intent
+    const { client_id, mode } = req.query;
+    const state = Buffer.from(JSON.stringify({ client_id, mode })).toString('base64url');
+
     const redirectUri = `${BASE_URL}/api/v1/auth/google/callback`;
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=profile email`;
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=profile email&state=${state}`;
 
     res.redirect(url);
 };
@@ -57,13 +61,37 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
         // 3. Upsert User & AuthProvider in DB
         const { id: googleId, email, verified_email } = profileData;
 
-        let user = await prisma.user.findUnique({ where: { email } });
+        // Extract tenant and mode from state
+        const stateStr = req.query.state as string;
+        let tenantId: string | null = null;
+        let mode: string | null = null;
+        if (stateStr) {
+            try {
+                const parsedState = JSON.parse(Buffer.from(stateStr, 'base64url').toString('utf-8'));
+                mode = parsedState.mode;
+                if (parsedState.client_id) {
+                    const tenant = await prisma.tenant.findUnique({ where: { clientId: parsedState.client_id }, select: { id: true } });
+                    if (tenant) tenantId = tenant.id;
+                }
+            } catch (e) {
+                console.error("Failed to parse OAuth state:", e);
+            }
+        }
+
+        let user = await prisma.user.findFirst({ where: { email, tenantId } });
 
         if (!user) {
+            // If we are in 'login' mode, do NOT auto-create. Redirect with error.
+            if (mode === "login") {
+                res.redirect(`${FRONTEND_URL}/login?error=account_not_found`);
+                return;
+            }
+
             user = await prisma.user.create({
                 data: {
                     email,
                     emailVerified: verified_email,
+                    ...(tenantId ? { tenantId } : {}),
                 },
             });
         }
@@ -119,8 +147,11 @@ export const githubLogin = (req: Request, res: Response) => {
     const clientId = process.env.GITHUB_CLIENT_ID;
     if (!clientId) return res.status(500).json({ error: "GitHub OAuth not configured" });
 
+    const { client_id, mode } = req.query;
+    const state = Buffer.from(JSON.stringify({ client_id, mode })).toString('base64url');
+
     const redirectUri = `${BASE_URL}/api/v1/auth/github/callback`;
-    const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email`;
+    const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email&state=${state}`;
 
     res.redirect(url);
 };
@@ -186,13 +217,36 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
         // 3. Upsert User & AuthProvider
         const githubId = String(profileData.id);
 
-        let user = await prisma.user.findUnique({ where: { email } });
+        const stateStr = req.query.state as string;
+        let tenantId: string | null = null;
+        let mode: string | null = null;
+        if (stateStr) {
+            try {
+                const parsedState = JSON.parse(Buffer.from(stateStr, 'base64url').toString('utf-8'));
+                mode = parsedState.mode;
+                if (parsedState.client_id) {
+                    const tenant = await prisma.tenant.findUnique({ where: { clientId: parsedState.client_id }, select: { id: true } });
+                    if (tenant) tenantId = tenant.id;
+                }
+            } catch (e) {
+                console.error("Failed to parse OAuth state:", e);
+            }
+        }
+
+        let user = await prisma.user.findFirst({ where: { email, tenantId } });
 
         if (!user) {
+            // If we are in 'login' mode, do NOT auto-create. Redirect with error.
+            if (mode === "login") {
+                res.redirect(`${FRONTEND_URL}/login?error=account_not_found`);
+                return;
+            }
+
             user = await prisma.user.create({
                 data: {
                     email,
                     emailVerified: true, // GitHub verified it
+                    ...(tenantId ? { tenantId } : {}),
                 },
             });
         }

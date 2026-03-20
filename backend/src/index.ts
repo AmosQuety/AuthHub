@@ -3,15 +3,17 @@ import helmet from "helmet";
 import cors from "cors";
 import dotenv from "dotenv";
 import { errorHandler } from "./middlewares/errorHandler.js";
-import cookieParser from "cookie-parser"; // Need to install this
+import cookieParser from "cookie-parser";
 import authRouter from "./modules/auth/router.js";
 import oidcRouter from "./modules/oidc/router.js";
 import oauthRouter from "./modules/oauth/router.js";
 import adminRouter from "./modules/admin/router.js";
 import developerRouter from "./modules/developer/router.js";
+import billingRouter from "./modules/billing/router.js";
 import prisma from "./db/client.js";
 import cron from "node-cron";
 import { runKeepAlive } from "./db/keep-alive.js";
+import { openApiSpec } from "./docs/openapi.js";
 
 dotenv.config();
 
@@ -66,6 +68,9 @@ app.use(
 );
 app.use(cookieParser());
 
+// Webhooks must be mounted before expressive.json() so Stripe can read the raw buffer
+app.use("/api/v1/webhooks", billingRouter);
+
 // Body Parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // OAuth clients often send form-urlencoded
@@ -82,10 +87,46 @@ app.get("/health", async (req, res) => {
 });
 
 app.use("/api/v1/auth", authRouter);
-app.use("/auth", oidcRouter);
+app.use("/api/v1/oidc", oidcRouter);
 app.use("/api/v1/oauth", oauthRouter);
 app.use("/api/v1/admin", adminRouter);
-app.use("/api/v1/user", developerRouter);
+app.use("/api/v1/developer", developerRouter);
+
+// ─── API Docs ─────────────────────────────────────────────────────────────────
+// Serve the OpenAPI spec as JSON (can be consumed by any Swagger viewer)
+app.get("/api/v1/docs/openapi.json", (_req, res) => {
+  res.json(openApiSpec);
+});
+
+// Serve a Swagger UI HTML page (pulls CSS/JS from the official CDN)
+app.get("/api/v1/docs", (_req, res) => {
+  res.setHeader("Content-Type", "text/html");
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <title>AuthHub API Docs</title>
+      <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+      <style>body{margin:0;padding:0;background:#0f172a;}</style>
+    </head>
+    <body>
+      <div id="swagger-ui"></div>
+      <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+      <script>
+        SwaggerUIBundle({
+          url: '/api/v1/docs/openapi.json',
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+          layout: 'BaseLayout'
+        });
+      </script>
+    </body>
+    </html>
+  `);
+});
+
 
 // Global Error Handler
 app.use(errorHandler);

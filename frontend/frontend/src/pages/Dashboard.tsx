@@ -3,17 +3,51 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
 import { useToast } from "../contexts/ToastContext";
-import { LogOut, Laptop, Smartphone, Trash2, Loader2, KeyRound, ShieldCheck, Fingerprint, TerminalSquare, Webhook, ShieldAlert, Users, Settings2, Globe } from "lucide-react";
+import {
+  LogOut, Laptop, Smartphone, Trash2, Loader2,
+  KeyRound, ShieldCheck, Fingerprint, ShieldAlert,
+  Users, Settings2, Globe, Webhook, TerminalSquare,
+  Clock, MapPin, Sparkles
+} from "lucide-react";
 
 interface Session {
   id: string;
   ipAddress: string | null;
-  deviceInfo: {
-    browser?: string;
-    os?: string;
-    isMobile?: boolean;
-  };
+  deviceInfo: { browser?: string; os?: string; isMobile?: boolean };
   expiresAt: string;
+}
+
+function NavCard({
+  icon: Icon, label, sub, action, onClick, accent = false
+}: {
+  icon: any; label: string; sub: string; action: string; onClick: () => void; accent?: boolean;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      className={`group flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-200 border
+        ${accent
+          ? "border-violet-500/15 bg-violet-600/5 hover:bg-violet-600/10 hover:border-violet-500/30"
+          : "border-white/5 bg-white/2 hover:bg-white/5 hover:border-white/10"
+        }`}
+    >
+      <div className={`p-2 rounded-lg flex-shrink-0 ${accent ? "bg-violet-600/20 text-violet-400" : "bg-white/5 text-white/40 group-hover:text-white/60"}`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className={`text-sm font-medium truncate ${accent ? "text-violet-300" : "text-white/70"}`}>{label}</div>
+        <div className="text-[10px] text-white/25 truncate">{sub}</div>
+      </div>
+      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 transition-all
+        ${accent
+          ? "text-violet-400 bg-violet-600/15 group-hover:bg-violet-600/25"
+          : "text-white/30 bg-white/5 group-hover:text-white/50"
+        }`}
+      >
+        {action}
+      </span>
+    </div>
+  );
 }
 
 export default function Dashboard() {
@@ -23,234 +57,156 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { success, error: showError } = useToast();
 
-  const fetchSessions = async () => {
-    try {
-      const data = await api.get("/auth/sessions"); // Assumes this endpoint exists or will exist
-      setSessions(data.sessions || []);
-    } catch (e) {
-      console.error("Failed to load sessions");
-    } finally {
-      setIsLoadingSessions(false);
-    }
-  };
-
   useEffect(() => {
-    fetchSessions();
+    api.get("/auth/sessions")
+      .then(d => setSessions(d.sessions || []))
+      .catch(() => {})
+      .finally(() => setIsLoadingSessions(false));
   }, []);
 
-  const handleRevokeSession = async (sessionId: string) => {
+  const handleRevokeSession = async (id: string) => {
     try {
-      await api.delete(`/auth/sessions/${sessionId}`);
-      setSessions(s => s.filter(x => x.id !== sessionId));
-      success("Session revoked successfully");
-    } catch (e) {
-      showError("Failed to revoke session");
-      console.error("Failed to revoke session");
-    }
+      await api.delete(`/auth/sessions/${id}`);
+      setSessions(s => s.filter(x => x.id !== id));
+      success("Session revoked");
+    } catch { showError("Failed to revoke session"); }
   };
 
+  const isAdmin = Array.isArray((user as any)?.roles) && (user as any).roles.includes("ADMIN");
+
   return (
-    <div className="min-h-screen w-full p-4 md:p-8 flex justify-center">
-      <div className="w-full max-w-4xl space-y-6">
-        
-        {/* Header Header */}
-        <header className="glass-card p-6 flex flex-col md:flex-row items-center justify-between">
+    <div className="min-h-screen w-full p-4 md:p-8">
+      <div className="max-w-5xl mx-auto space-y-6">
+
+        {/* Header bar */}
+        <header className="glass-card-vivid p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-fade-up">
           <div>
-            <h1 className="text-2xl font-bold">Account Dashboard</h1>
-            <p className="text-gray-400 mt-1">Manage your security and active sessions.</p>
+            <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-1">Account Dashboard</p>
+            <h1 className="text-2xl font-bold text-gradient" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              {user?.email?.split("@")[0]}
+            </h1>
+            <p className="text-sm text-white/35 mt-0.5">{user?.email}</p>
           </div>
-            <div className="mt-4 md:mt-0 flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 bg-brand-surface rounded-full text-sm font-medium border border-brand-border">
-                  {user?.email}
-                </span>
-                {user?.roles && user.roles.length > 0 && (
-                  <span className="px-2 py-0.5 bg-brand-primary/10 text-brand-primary text-[10px] font-bold uppercase rounded border border-brand-primary/20">
-                    {user.roles.join(', ')}
-                  </span>
-                )}
-              </div>
-              <button onClick={logout} className="btn-secondary !w-auto !py-2 text-red-400 hover:text-red-300">
-                <LogOut className="w-4 h-4" /> Sign out
-              </button>
-            </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            {isAdmin && (
+              <span className="badge badge-violet">
+                <ShieldCheck className="w-3 h-3" /> Admin
+              </span>
+            )}
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-red-400 text-sm font-medium hover:bg-red-500/10 hover:border-red-500/30 transition-all"
+            >
+              <LogOut className="w-4 h-4" /> Sign out
+            </button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          {/* Left Column: Security Status */}
-          <div className="glass-card p-6 md:col-span-1 h-fit space-y-6">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-brand-primary" /> Security Status
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-xl border border-brand-border">
-                <div className="flex items-center gap-3">
-                  <KeyRound className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <h3 className="text-sm font-medium">Password</h3>
-                    <p className="text-xs text-gray-500">Last changed recently</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-xl border border-brand-border">
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <h3 className="text-sm font-medium">Two-Factor Auth</h3>
-                    <p className="text-xs text-yellow-500">Not configured</p>
-                  </div>
-                </div>
-                <button onClick={() => navigate("/mfa-setup")} className="text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors">Setup</button>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-xl border border-brand-border">
-                <div className="flex items-center gap-3">
-                  <Fingerprint className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <h3 className="text-sm font-medium">Passkeys</h3>
-                    <p className="text-xs text-yellow-500">Not configured</p>
-                  </div>
-                </div>
-                <button onClick={() => navigate("/passkey-setup")} className="text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors">Add</button>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-xl border border-brand-border">
-                <div className="flex items-center gap-3">
-                  <ShieldAlert className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <h3 className="text-sm font-medium">Security Audit</h3>
-                    <p className="text-xs text-gray-400">View login history</p>
-                  </div>
-                </div>
-                <button onClick={() => navigate("/security-audit")} className="text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors">Logs</button>
+          {/* Left column — navigation cards */}
+          <div className="md:col-span-1 space-y-5 animate-fade-up stagger-1">
+            {/* Security section */}
+            <div className="glass-card p-5">
+              <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-4 flex items-center gap-2">
+                <ShieldCheck className="w-3 h-3 text-violet-400" /> Security
+              </p>
+              <div className="space-y-2">
+                <NavCard icon={KeyRound} label="Password" sub="Manage credentials" action="Change" onClick={() => {}} />
+                <NavCard icon={ShieldCheck} label="Two-Factor Auth" sub="TOTP authenticator" action="Setup" onClick={() => navigate("/mfa-setup")} />
+                <NavCard icon={Fingerprint} label="Passkeys" sub="Biometric login" action="Add" onClick={() => navigate("/passkey-setup")} />
+                <NavCard icon={ShieldAlert} label="Security Audit" sub="Login history" action="View" onClick={() => navigate("/security-audit")} />
               </div>
             </div>
 
-            <h2 className="text-lg font-semibold flex items-center gap-2 mt-8">
-              <TerminalSquare className="w-5 h-5 text-brand-primary" /> Developer Tools
-            </h2>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-xl border border-brand-border">
-                <div className="flex items-center gap-3">
-                  <TerminalSquare className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <h3 className="text-sm font-medium">Developer Portal</h3>
-                    <p className="text-xs text-gray-400">Manage OAuth Applications</p>
-                  </div>
-                </div>
-                <button onClick={() => navigate("/developer")} className="text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors">Open</button>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-xl border border-brand-border">
-                <div className="flex items-center gap-3">
-                  <Webhook className="w-5 h-5 text-gray-400" />
-                  <div>
-                    <h3 className="text-sm font-medium">Webhooks</h3>
-                    <p className="text-xs text-gray-400">Configure event streams</p>
-                  </div>
-                </div>
-                <button onClick={() => navigate("/webhooks")} className="text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors">Config</button>
+            {/* Developer section */}
+            <div className="glass-card p-5">
+              <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-4 flex items-center gap-2">
+                <TerminalSquare className="w-3 h-3 text-cyan-400" /> Developer
+              </p>
+              <div className="space-y-2">
+                <NavCard icon={Globe} label="Developer Portal" sub="OAuth applications" action="Open" onClick={() => navigate("/developer")} />
+                <NavCard icon={Webhook} label="Webhooks" sub="Event streams" action="Config" onClick={() => navigate("/webhooks")} />
               </div>
             </div>
 
-            {/* Admin Console Section - Only visible to Admins */}
-            {Array.isArray(user?.roles) && user.roles.includes("ADMIN") && (
-              <>
-                <h2 className="text-lg font-semibold flex items-center gap-2 mt-8 text-brand-primary">
-                  <ShieldCheck className="w-5 h-5" /> Admin Console
-                </h2>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-xl border border-brand-primary/20">
-                    <div className="flex items-center gap-3">
-                      <Users className="w-5 h-5 text-gray-400" />
-                      <div>
-                        <h3 className="text-sm font-medium">User Management</h3>
-                        <p className="text-xs text-gray-400">View and manage users</p>
-                      </div>
-                    </div>
-                    <button onClick={() => navigate("/admin/users")} className="text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors">Manage</button>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-xl border border-brand-primary/20">
-                    <div className="flex items-center gap-3">
-                      <Globe className="w-5 h-5 text-gray-400" />
-                      <div>
-                        <h3 className="text-sm font-medium">Global Apps</h3>
-                        <p className="text-xs text-gray-400">Manage all OAuth Clients</p>
-                      </div>
-                    </div>
-                    <button onClick={() => navigate("/admin/clients")} className="text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors">Manage</button>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-brand-surface/50 rounded-xl border border-brand-primary/20">
-                    <div className="flex items-center gap-3">
-                      <Settings2 className="w-5 h-5 text-gray-400" />
-                      <div>
-                        <h3 className="text-sm font-medium">Tenant Branding</h3>
-                        <p className="text-xs text-gray-400">Configure global styles</p>
-                      </div>
-                    </div>
-                    <button onClick={() => navigate("/admin/tenant")} className="text-xs font-medium text-brand-primary hover:text-brand-primary-hover transition-colors">Config</button>
-                  </div>
+            {/* Admin section — only visible to admins */}
+            {isAdmin && (
+              <div className="glass-card p-5">
+                <p className="text-[10px] uppercase tracking-widest text-violet-400/60 font-bold mb-4 flex items-center gap-2">
+                  <Sparkles className="w-3 h-3 text-violet-400" /> Admin Console
+                </p>
+                <div className="space-y-2">
+                  <NavCard icon={Users} label="User Management" sub="View all users" action="Manage" onClick={() => navigate("/admin/users")} accent />
+                  <NavCard icon={Globe} label="Global Apps" sub="All OAuth clients" action="Manage" onClick={() => navigate("/admin/clients")} accent />
+                  <NavCard icon={Settings2} label="Tenant Branding" sub="Configure styles" action="Config" onClick={() => navigate("/admin/tenant")} accent />
                 </div>
-              </>
+              </div>
             )}
-
           </div>
 
-          {/* Right Column: Active Sessions */}
-          <div className="glass-card p-6 md:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Laptop className="w-5 h-5 text-brand-primary" /> Active Sessions
-              </h2>
-            </div>
-            
-            {isLoadingSessions ? (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
+          {/* Right column — active sessions */}
+          <div className="md:col-span-2 animate-fade-up stagger-2">
+            <div className="glass-card h-full p-5">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-0.5">Active Sessions</p>
+                  <h2 className="text-white font-semibold">Devices & Locations</h2>
+                </div>
+                <div className="badge badge-cyan">{sessions.length} active</div>
               </div>
-            ) : sessions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <p>No active sessions found.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {sessions.map((session) => (
-                  <div key={session.id} className="flex items-center justify-between p-4 bg-brand-surface rounded-xl border border-brand-border">
-                    <div className="flex items-center gap-4">
-                      {session.deviceInfo?.isMobile ? (
-                        <Smartphone className="w-6 h-6 text-gray-400" />
-                      ) : (
-                        <Laptop className="w-6 h-6 text-gray-400" />
-                      )}
-                      <div>
-                        <h3 className="font-medium">
-                          {session.deviceInfo?.os || "Unknown OS"} • {session.deviceInfo?.browser || "Unknown Browser"}
-                        </h3>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {session.ipAddress || "Unknown IP"} • Expires {new Date(session.expiresAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => handleRevokeSession(session.id)}
-                      className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
-                      title="Revoke session"
+
+              {isLoadingSessions ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className={`skeleton h-[72px] rounded-xl stagger-${i}`} />
+                  ))}
+                </div>
+              ) : sessions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-48 text-center">
+                  <Laptop className="w-10 h-10 text-white/10 mb-3" />
+                  <p className="text-white/25 text-sm">No active sessions found.</p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {sessions.map((session, i) => (
+                    <div
+                      key={session.id}
+                      className={`group flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/2 hover:bg-white/4 hover:border-white/10 transition-all duration-200 animate-fade-up stagger-${Math.min(i + 1, 5)}`}
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                      <div className="p-2.5 rounded-xl bg-white/5 flex-shrink-0">
+                        {session.deviceInfo?.isMobile
+                          ? <Smartphone className="w-5 h-5 text-white/40" />
+                          : <Laptop className="w-5 h-5 text-white/40" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-white/80 truncate">
+                          {session.deviceInfo?.os || "Unknown OS"} · {session.deviceInfo?.browser || "Unknown Browser"}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-white/25">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {session.ipAddress || "Unknown IP"}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            Expires {new Date(session.expiresAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRevokeSession(session.id)}
+                        className="p-2 rounded-lg text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all opacity-0 group-hover:opacity-100"
+                        title="Revoke session"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-
         </div>
       </div>
     </div>
