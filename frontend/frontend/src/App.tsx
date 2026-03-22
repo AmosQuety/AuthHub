@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { TenantProvider } from "./contexts/TenantContext";
 import { ToastProvider } from "./contexts/ToastContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { ThemeToggle } from "./components/ThemeToggle";
 import { ProtectedRoute, PublicRoute } from "./components/AuthRoutes";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -16,6 +18,7 @@ import PasskeySetup from "./pages/PasskeySetup";
 import DeveloperPortal from "./pages/DeveloperPortal";
 import Webhooks from "./pages/Webhooks";
 import SecurityAudit from "./pages/SecurityAudit";
+import Billing from "./pages/Billing";
 import { AdminRoute } from "./components/AdminRoute";
 import AdminClients from "./pages/admin/AdminClients";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -24,11 +27,13 @@ import AdminObservability from "./pages/admin/AdminObservability";
 
 export default function App() {
   return (
-    <TenantProvider>
-      <ToastProvider>
-        <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <ThemeProvider>
+      <TenantProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <ThemeToggle />
+              <Routes>
           {/* Public Authentication Routes */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
@@ -52,6 +57,7 @@ export default function App() {
             <Route path="/developer" element={<DeveloperPortal />} />
             <Route path="/webhooks" element={<Webhooks />} />
             <Route path="/security-audit" element={<SecurityAudit />} />
+            <Route path="/billing" element={<Billing />} />
           </Route>
 
           {/* Admin Console — requires ADMIN role */}
@@ -63,10 +69,11 @@ export default function App() {
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-      </AuthProvider>
-      </ToastProvider>
-    </TenantProvider>
+            </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </ToastProvider>
+      </TenantProvider>
+    </ThemeProvider>
   );
 }

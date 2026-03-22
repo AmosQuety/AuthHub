@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import prisma from "../../db/client.js";
 import argon2 from "argon2";
 import { subDays, startOfDay } from "date-fns";
+import { hashPassword } from "../../core/crypto.js";
 
 // Basic CRUD for managing OAuth Clients owned by normal users. 
 // Fully protected by `authenticate` middleware inside the router.
@@ -27,7 +28,7 @@ export const createClient = async (req: Request, res: Response, next: NextFuncti
             data: {
                 clientId: crypto.randomUUID(), // Explicitly generated UUID for the client
                 name,
-                clientSecretHash: clientSecret ? await argon2.hash(clientSecret) : "none", // Storing none for public clients to satisfy non-null
+                clientSecretHash: clientSecret ? await hashPassword(clientSecret) : "none", // Storing none for public clients to satisfy non-null
                 redirectUris,
                 isPublic: !isConfidential,
                 ownerId: userId,
@@ -179,7 +180,7 @@ export const rotateSecret = async (req: Request, res: Response, next: NextFuncti
         const updatedClient = await prisma.oAuthClient.update({
             where: { clientId: id },
             data: {
-                clientSecretHash: await argon2.hash(newSecret),
+                clientSecretHash: await hashPassword(newSecret),
             }
         });
 

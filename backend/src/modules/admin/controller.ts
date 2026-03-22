@@ -4,7 +4,7 @@ import argon2 from "argon2";
 import { randomBytes } from "crypto";
 import { AuditService } from "../../core/audit.js";
 import { sendMail } from "../../core/mailer.js";
-import { generateTokens } from "../../core/crypto.js";
+import { generateTokens, hashPassword } from "../../core/crypto.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -39,7 +39,7 @@ export const createClient = async (req: Request, res: Response, next: NextFuncti
             data: {
                 clientId: crypto.randomUUID(), // Explicitly generated UUID for the client
                 name,
-                clientSecretHash: clientSecret ? await argon2.hash(clientSecret) : "none", // Storing none for public clients to satisfy non-null
+                clientSecretHash: clientSecret ? await hashPassword(clientSecret) : "none", // Storing none for public clients to satisfy non-null
                 redirectUris,
                 isPublic: !isConfidential,
                 tenantId: tenantId || null,
