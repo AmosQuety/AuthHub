@@ -53,6 +53,29 @@ export const checkConsent = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
+/**
+ * Standard OIDC landing point for the browser.
+ * Redirects the user to the React Frontend's /authorize page.
+ */
+export const authorizeRedirect = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    
+    // Construct the frontend destination URL
+    const target = new URL(`${frontendUrl}/authorize`);
+    
+    // Copy all query parameters from the backend request to the frontend redirect
+    Object.keys(req.query).forEach(key => {
+      target.searchParams.append(key, String(req.query[key]));
+    });
+
+    // Perform the redirect
+    res.redirect(target.toString());
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const authorize = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // We expect the frontend consent screen to POST these params

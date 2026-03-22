@@ -20,6 +20,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Enable 'trust proxy' to ensure req.ip reads the true client IP behind Cloudflare/Render/AWS load balancers
+app.set("trust proxy", 1);
+
 // Strict Security Headers
 app.use(
   helmet({
@@ -133,11 +136,10 @@ app.use(errorHandler);
 
 // Start Server
 if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT as number, "0.0.0.0", () => {
+  const server = app.listen(PORT as number, "0.0.0.0", () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
     
     // Database & Redis Keep-Alive (every 6 hours)
-    // 0 */6 * * *
     cron.schedule("0 */6 * * *", () => {
        runKeepAlive();
     });
@@ -145,6 +147,31 @@ if (process.env.NODE_ENV !== "test") {
     // Run first ping immediately on start
     runKeepAlive();
   });
+
+  // Graceful Shutdown routines for containerized deployments (Docker/Kubernetes)
+  const gracefulShutdown = () => {
+    console.log("Received kill signal, shutting down gracefully.");
+    server.close(async () => {
+      console.log("Closed out remaining HTTP connections.");
+      try {
+        await prisma.$disconnect();
+        console.log("Prisma connection closed.");
+        process.exit(0);
+      } catch (err) {
+        console.error("Error during graceful shutdown", err);
+        process.exit(1);
+      }
+    });
+
+    // Force close after 10 seconds if connections are hanging
+    setTimeout(() => {
+      console.error("Could not close connections in time, forcefully shutting down");
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on("SIGTERM", gracefulShutdown);
+  process.on("SIGINT", gracefulShutdown);
 }
 
 export default app;

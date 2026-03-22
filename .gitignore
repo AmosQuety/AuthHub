@@ -1,0 +1,28 @@
+# External Apps (Test Consumers)
+Zoo-App/
+
+# Environment Variables
+.env
+backend/.env
+backend/.env.*
+Zoo-App/.env
+
+# Dependencies
+node_modules/
+backend/node_modules/
+frontend/frontend/node_modules/
+
+# Build outputs
+dist/
+backend/dist/
+frontend/frontend/dist/
+
+# Logs
+*.log
+backend/debug_output.txt
+backend/test-output.log
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store

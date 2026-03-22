@@ -7,8 +7,9 @@ import {
   LogOut, Laptop, Smartphone, Trash2, Loader2,
   KeyRound, ShieldCheck, Fingerprint, ShieldAlert,
   Users, Settings2, Globe, Webhook, TerminalSquare,
-  Clock, MapPin, Sparkles
+  Clock, MapPin, Sparkles, CreditCard
 } from "lucide-react";
+import { OnboardingTour } from "../components/OnboardingTour";
 
 interface Session {
   id: string;
@@ -18,12 +19,13 @@ interface Session {
 }
 
 function NavCard({
-  icon: Icon, label, sub, action, onClick, accent = false
+  icon: Icon, label, sub, action, onClick, accent = false, id
 }: {
-  icon: any; label: string; sub: string; action: string; onClick: () => void; accent?: boolean;
+  icon: any; label: string; sub: string; action: string; onClick: () => void; accent?: boolean; id?: string;
 }) {
   return (
     <div
+      id={id}
       onClick={onClick}
       className={`group flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-200 border
         ${accent
@@ -76,6 +78,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen w-full p-4 md:p-8">
+      <OnboardingTour />
       <div className="max-w-5xl mx-auto space-y-6">
 
         {/* Header bar */}
@@ -105,14 +108,15 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Left column — navigation cards */}
           <div className="md:col-span-1 space-y-5 animate-fade-up stagger-1">
-            {/* Security section */}
+            {/* Account & Security section */}
             <div className="glass-card p-5">
               <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-4 flex items-center gap-2">
-                <ShieldCheck className="w-3 h-3 text-violet-400" /> Security
+                <ShieldCheck className="w-3 h-3 text-violet-400" /> Account & Security
               </p>
               <div className="space-y-2">
+                <NavCard icon={CreditCard} label="Billing" sub="Manage subscription" action="View" onClick={() => navigate("/billing")} />
                 <NavCard icon={KeyRound} label="Password" sub="Manage credentials" action="Change" onClick={() => {}} />
-                <NavCard icon={ShieldCheck} label="Two-Factor Auth" sub="TOTP authenticator" action="Setup" onClick={() => navigate("/mfa-setup")} />
+                <NavCard id="tour-mfa-setup" icon={ShieldCheck} label="Two-Factor Auth" sub="TOTP authenticator" action="Setup" onClick={() => navigate("/mfa-setup")} />
                 <NavCard icon={Fingerprint} label="Passkeys" sub="Biometric login" action="Add" onClick={() => navigate("/passkey-setup")} />
                 <NavCard icon={ShieldAlert} label="Security Audit" sub="Login history" action="View" onClick={() => navigate("/security-audit")} />
               </div>
@@ -124,7 +128,7 @@ export default function Dashboard() {
                 <TerminalSquare className="w-3 h-3 text-cyan-400" /> Developer
               </p>
               <div className="space-y-2">
-                <NavCard icon={Globe} label="Developer Portal" sub="OAuth applications" action="Open" onClick={() => navigate("/developer")} />
+                <NavCard id="tour-developer-portal" icon={Globe} label="Developer Portal" sub="OAuth applications" action="Open" onClick={() => navigate("/developer")} />
                 <NavCard icon={Webhook} label="Webhooks" sub="Event streams" action="Config" onClick={() => navigate("/webhooks")} />
               </div>
             </div>
@@ -146,7 +150,7 @@ export default function Dashboard() {
 
           {/* Right column — active sessions */}
           <div className="md:col-span-2 animate-fade-up stagger-2">
-            <div className="glass-card h-full p-5">
+            <div id="tour-active-sessions" className="glass-card h-full p-5">
               <div className="flex items-center justify-between mb-5">
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-0.5">Active Sessions</p>

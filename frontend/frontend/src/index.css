@@ -1,10 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    FONTS — Outfit for headings, Inter for body, JetBrains Mono for code
 ───────────────────────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
 /* ─────────────────────────────────────────────────────────────────────────────
    DESIGN TOKENS
 ───────────────────────────────────────────────────────────────────────────── */
@@ -46,6 +45,63 @@
 @layer base {
   :root {
     color-scheme: dark;
+    --bg-base: #070710;
+    --text-base: #C8CAD4;
+    
+    /* Radial nebulas */
+    --aurora-1: rgba(124, 58, 237, 0.18);
+    --aurora-2: rgba(6, 182, 212, 0.12);
+    --aurora-3: rgba(109, 40, 217, 0.06);
+
+    /* Glass card specific */
+    --glass-bg-1: rgba(255,255,255,0.035);
+    --glass-bg-2: rgba(255,255,255,0.015);
+    --glass-border: rgba(255, 255, 255, 0.07);
+    --glass-shadow: rgba(0, 0, 0, 0.4);
+    --glass-inset: rgba(255, 255, 255, 0.06);
+    --glass-vivid-shadow: rgba(124, 58, 237, 0.15);
+    --glass-vivid-border: rgba(124, 58, 237, 0.2);
+
+    /* Inputs */
+    --input-bg: rgba(7, 7, 16, 0.7);
+    --input-focus-bg: rgba(7, 7, 16, 0.9);
+    --input-border: rgba(255,255,255,0.08);
+
+    /* Mono display */
+    --mono-bg: rgba(0, 0, 0, 0.45);
+    --mono-border: rgba(255,255,255,0.06);
+  }
+
+  .light {
+    color-scheme: light;
+    
+    /* MAGICAL TAILWIND INVERSION TRICK: 
+       Any Tailwind utility class using `white` (e.g. text-white, border-white/10)
+       is now cleanly remapped to dark navy for light mode readability! */
+    --color-white: #0f172a;
+    --color-black: #ffffff;
+
+    --bg-base: #f8fafc;
+    --text-base: #334155;
+
+    --aurora-1: rgba(124, 58, 237, 0.08);
+    --aurora-2: rgba(6, 182, 212, 0.06);
+    --aurora-3: rgba(109, 40, 217, 0.03);
+
+    --glass-bg-1: rgba(255,255,255,0.85);
+    --glass-bg-2: rgba(255,255,255,0.6);
+    --glass-border: rgba(15, 23, 42, 0.05);
+    --glass-shadow: rgba(15, 23, 42, 0.03);
+    --glass-inset: rgba(255, 255, 255, 0.9);
+    --glass-vivid-shadow: rgba(124, 58, 237, 0.08);
+    --glass-vivid-border: rgba(124, 58, 237, 0.15);
+
+    --input-bg: rgba(255, 255, 255, 0.85);
+    --input-focus-bg: rgba(255, 255, 255, 1);
+    --input-border: rgba(15, 23, 42, 0.1);
+
+    --mono-bg: rgba(15, 23, 42, 0.04);
+    --mono-border: rgba(15, 23, 42, 0.08);
   }
 
   *, *::before, *::after {
@@ -58,16 +114,18 @@
 
   body {
     font-family: var(--font-sans);
-    @apply text-[#C8CAD4] antialiased min-h-screen;
-    background-color: #070710;
+    color: var(--text-base);
+    background-color: var(--bg-base);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    transition: background-color 0.4s ease, color 0.4s ease;
 
     /* Dual radial nebula — shifts on animation */
     background-image:
-      radial-gradient(ellipse 80% 50% at 20% 0%, rgba(124, 58, 237, 0.18) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(6, 182, 212, 0.12) 0%, transparent 55%),
-      radial-gradient(ellipse 40% 30% at 50% 50%, rgba(109, 40, 217, 0.06) 0%, transparent 70%);
+      radial-gradient(ellipse 80% 50% at 20% 0%, var(--aurora-1) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, var(--aurora-2) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 30% at 50% 50%, var(--aurora-3) 0%, transparent 70%);
 
-    /* Subtle starfield texture */
     background-attachment: fixed;
   }
 
@@ -97,31 +155,33 @@
   .glass-card {
     background: linear-gradient(
       145deg,
-      rgba(255,255,255,0.035) 0%,
-      rgba(255,255,255,0.015) 100%
+      var(--glass-bg-1) 0%,
+      var(--glass-bg-2) 100%
     );
     backdrop-filter: blur(20px) saturate(160%);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-card);
+    transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
     box-shadow:
-      0 4px 6px -1px rgba(0, 0, 0, 0.4),
-      0 2px 4px -2px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      0 4px 6px -1px var(--glass-shadow),
+      0 2px 4px -2px var(--glass-shadow),
+      inset 0 1px 0 var(--glass-inset);
   }
 
   /* ── Vivid glow card (for featured/highlighted items) ── */
   .glass-card-vivid {
-    background: linear-gradient(145deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%);
+    background: linear-gradient(145deg, var(--glass-bg-1) 0%, var(--glass-bg-2) 100%);
     backdrop-filter: blur(20px) saturate(160%);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(124, 58, 237, 0.2);
+    border: 1px solid var(--glass-vivid-border);
     border-radius: var(--radius-card);
+    transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
     box-shadow:
-      0 0 0 1px rgba(124, 58, 237, 0.1),
-      0 4px 40px rgba(124, 58, 237, 0.15),
-      0 2px 4px -2px rgba(0, 0, 0, 0.4),
-      inset 0 1px 0 rgba(124, 58, 237, 0.1);
+      0 0 0 1px var(--glass-vivid-border),
+      0 4px 40px var(--glass-vivid-shadow),
+      0 2px 4px -2px var(--glass-shadow),
+      inset 0 1px 0 var(--glass-inset);
   }
 
   /* ── Primary Button — violet with animated glow pulse ── */
@@ -207,22 +267,22 @@
   .input-field {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: rgba(7, 7, 16, 0.7);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
     border-radius: var(--radius-input);
-    color: #fff;
+    color: var(--text-base);
     font-family: var(--font-sans);
     font-size: 0.9rem;
     outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s, color 0.2s;
   }
 
-  .input-field::placeholder { color: rgba(255,255,255,0.2); }
+  .input-field::placeholder { color: var(--text-muted); }
 
   .input-field:focus {
     border-color: rgba(124, 58, 237, 0.6);
     box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15), 0 0 20px rgba(124, 58, 237, 0.1);
-    background: rgba(7, 7, 16, 0.9);
+    background: var(--input-focus-bg);
   }
 
   .input-label {
@@ -256,16 +316,16 @@
 
   /* ── Stat/KPI Card ── */
   .stat-card {
-    background: linear-gradient(145deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 100%);
+    background: linear-gradient(145deg, var(--glass-bg-1) 0%, var(--glass-bg-2) 100%);
     backdrop-filter: blur(20px) saturate(160%);
     -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-card);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 6px -1px var(--glass-shadow), 0 2px 4px -2px var(--glass-shadow), inset 0 1px 0 var(--glass-inset);
     padding: 1.5rem;
     position: relative;
     overflow: hidden;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.4s ease, border-color 0.4s ease;
   }
   .stat-card:hover {
     transform: translateY(-3px);
@@ -312,10 +372,11 @@
     font-size: 0.8rem;
     padding: 0.6rem 0.875rem;
     border-radius: 0.5rem;
-    background: rgba(0, 0, 0, 0.45);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: var(--mono-bg);
+    border: 1px solid var(--mono-border);
     color: #a78bfa;
     letter-spacing: 0.02em;
+    transition: background-color 0.4s ease, border-color 0.4s ease;
   }
 
   /* ── Shimmer skeleton loader ── */
