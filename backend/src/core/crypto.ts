@@ -1,5 +1,6 @@
 import argon2 from "argon2";
 import * as jose from "jose";
+import crypto from "crypto";
 import prisma from "../db/client.js";
 
 // --- Password Hashing ---
@@ -18,6 +19,29 @@ export const verifyPassword = async (hash: string, plain: string): Promise<boole
   } catch (err) {
     return false;
   }
+};
+
+// --- Symmetric Encryption (AES-256-GCM) ---
+// For storing reversible secrets like SMTP passwords.
+const SYMMETRIC_KEY = process.env.ENCRYPTION_KEY || crypto.randomUUID().replace(/-/g, "").padEnd(32, "0").slice(0, 32);
+
+export const encryptSymmetric = (text: string): string => {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", Buffer.from(SYMMETRIC_KEY), iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  const authTag = cipher.getAuthTag().toString("hex");
+  return `${iv.toString("hex")}:${authTag}:${encrypted}`;
+};
+
+export const decryptSymmetric = (encryptedData: string): string => {
+  const [ivHex, authTagHex, encryptedHex] = encryptedData.split(":");
+  if (!ivHex || !authTagHex || !encryptedHex) throw new Error("Invalid encrypted format");
+  const decipher = crypto.createDecipheriv("aes-256-gcm", Buffer.from(SYMMETRIC_KEY), Buffer.from(ivHex, "hex"));
+  decipher.setAuthTag(Buffer.from(authTagHex, "hex"));
+  let decrypted = decipher.update(encryptedHex, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
 };
 
 // --- JWT (RS256) ---
@@ -62,7 +86,7 @@ export const getPublicJwk = async () => {
 
 // Generates a short-lived access token and a rotating refresh token.
 // The refresh token embeds the sessionId so logout can target a single session.
-export const generateTokens = async (userId: string, sessionId: string, scopes: string[] = [], roles: string[] = ["USER"], impersonatorId?: string) => {
+export const generateTokens = async (userId: string, sessionId: string, scopes: string[] = [], roles: string[] = ["USER"], name?: string | null, impersonatorId?: string) => {
   const key = await getPrivateKey();
   const kid = await getKeyId();
   const issuer = process.env.BASE_URL || "http://localhost:3000";
@@ -77,6 +101,9 @@ export const generateTokens = async (userId: string, sessionId: string, scopes: 
   const finalScopes = Array.from(new Set([...scopes, ...activePlanScopes]));
 
   const accessPayload: any = { sub: userId, roles };
+  if (name) {
+    accessPayload.name = name;
+  }
   if (finalScopes.length > 0) {
     accessPayload.scopes = finalScopes;
   }
@@ -136,7 +163,7 @@ export const generateIdToken = async (
   userId: string,
   clientId: string,
   nonce?: string,
-  userProfile?: { email?: string; emailVerified?: boolean;[key: string]: any },
+  userProfile?: { email?: string; emailVerified?: boolean; name?: string | null; [key: string]: any },
   scopes: string[] = []
 ) => {
   const key = await getPrivateKey();
@@ -153,6 +180,10 @@ export const generateIdToken = async (
   if (scopes.includes("email") && userProfile) {
     payload.email = userProfile.email;
     payload.email_verified = userProfile.emailVerified;
+  }
+
+  if (userProfile?.name) {
+    payload.name = userProfile.name;
   }
 
   const jwt = new jose.SignJWT(payload)

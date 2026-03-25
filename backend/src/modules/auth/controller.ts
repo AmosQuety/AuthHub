@@ -8,7 +8,8 @@ import { BruteForceService } from "../../middlewares/rateLimiter.js";
 
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { email, password, client_id } = req.body;
+    let { email, password, name, client_id } = req.body;
+    email = email.toLowerCase();
 
     if (!email || !password) {
       res.status(400).json({ error: "Email and password are required" });
@@ -41,6 +42,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     const user = await prisma.user.create({
       data: {
         email,
+        name,
         passwordHash,
         ...(tenantId ? { tenantId } : {}),
       },
@@ -57,7 +59,8 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    email = email.toLowerCase();
 
     if (!email || !password) {
       res.status(400).json({ error: "Email and password are required" });
@@ -87,6 +90,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     });
 
     if (!user || !user.passwordHash) {
+      console.log(`[AUTH] Login failed: User not found for email ${email}`);
       // Record failure even for unknown emails to prevent user enumeration via timing
       await BruteForceService.recordFailure(email);
       res.status(401).json({ error: "Invalid credentials" });
@@ -96,6 +100,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     const isValid = await verifyPassword(user.passwordHash, password);
 
     if (!isValid) {
+      console.log(`[AUTH] Login failed: Password mismatch for email ${email}`);
       // Record this failure for per-account brute-force tracking
       await BruteForceService.recordFailure(email);
       AuditService.log({
@@ -177,7 +182,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     });
 
     // 2. Generate tokens now that we have sessionId
-    const { accessToken, refreshToken } = await generateTokens(user.id, session.id, [], user.roles);
+    const { accessToken, refreshToken } = await generateTokens(user.id, session.id, [], user.roles, user.name);
 
     // 3. Store hashed refresh token in the session
     const refreshTokenHash = await hashPassword(refreshToken);
@@ -247,6 +252,7 @@ export const me = async (req: Request, res: Response, next: NextFunction): Promi
       select: {
         id: true,
         email: true,
+        name: true,
         emailVerified: true,
         roles: true,
         createdAt: true,
@@ -399,7 +405,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     }
 
     // 5. Generate fresh tokens linked to the new session
-    const { accessToken, refreshToken: newRefreshToken } = await generateTokens(userId, newSession.id, [], user.roles);
+    const { accessToken, refreshToken: newRefreshToken } = await generateTokens(userId, newSession.id, [], user.roles, user.name);
 
     // 5. Hash and save new refresh token
     const newRefreshTokenHash = await hashPassword(newRefreshToken);

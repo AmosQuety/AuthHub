@@ -18,6 +18,7 @@ enum Role {
 model User {
   id             String         @id @default(uuid()) @db.Uuid
   email          String
+  name           String?        @map("name")
   passwordHash   String?        @map("password_hash") // Optional for social login
   emailVerified  Boolean        @default(false) @map("email_verified")
   createdAt      DateTime       @default(now()) @map("created_at")
