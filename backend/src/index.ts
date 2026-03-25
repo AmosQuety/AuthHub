@@ -29,10 +29,10 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'"],
+        connectSrc: ["'self'", "https://unpkg.com"],
         fontSrc: ["'self'"],
         objectSrc: ["'none'"],
         mediaSrc: ["'none'"],
@@ -51,7 +51,8 @@ app.use(
   })
 );
 // CORS — only allow explicitly whitelisted origins from env
-const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "http://localhost:3001")
+const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "http://localhost:8081")
+// localhost:3001
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
@@ -109,21 +110,48 @@ app.get("/api/v1/docs", (_req, res) => {
     <html lang="en">
     <head>
       <meta charset="UTF-8" />
-      <title>AuthHub API Docs</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>API Docs | AuthHub</title>
       <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
-      <style>body{margin:0;padding:0;background:#0f172a;}</style>
+      <style>
+        body { margin: 0; padding: 0; background: #0b0f1a; font-family: sans-serif; overflow-x: hidden; }
+        
+        /* Dark Mode Overrides for Swagger UI */
+        .swagger-ui { filter: invert(88%) hue-rotate(180deg); max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .swagger-ui .topbar { display: none; }
+        .swagger-ui .info .title { color: #000; font-size: 32px; }
+        .swagger-ui .scheme-container { background: transparent; box-shadow: none; border-bottom: 1px solid rgba(0,0,0,0.1); padding: 20px 0; }
+        .swagger-ui .opblock { border-radius: 12px; border: none; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 12px; }
+        .swagger-ui .btn.authorize { color: #1bd671; border-color: #1bd671; background: transparent; }
+        .swagger-ui .btn.authorize svg { fill: #1bd671; }
+        
+        /* Specific fix for the white bar the user saw */
+        .swagger-ui .servers-title { color: #000; }
+        .swagger-ui select { background: #eee; border: 1px solid #ccc; border-radius: 8px; padding: 4px 8px; }
+
+        /* Outer container to un-invert the background but keep the content readable */
+        #ui-wrapper { background: #0b0f1a; min-height: 100vh; }
+      </style>
     </head>
     <body>
-      <div id="swagger-ui"></div>
+      <div id="ui-wrapper">
+        <div id="swagger-ui"></div>
+      </div>
       <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
       <script>
-        SwaggerUIBundle({
-          url: '/api/v1/docs/openapi.json',
-          dom_id: '#swagger-ui',
-          deepLinking: true,
-          presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
-          layout: 'BaseLayout'
-        });
+        window.onload = () => {
+          window.ui = SwaggerUIBundle({
+            url: '/api/v1/docs/openapi.json',
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            presets: [
+              SwaggerUIBundle.presets.apis,
+              SwaggerUIBundle.SwaggerUIStandalonePreset
+            ],
+            layout: 'BaseLayout',
+            defaultModelsExpandDepth: -1, // Hide schemas by default for cleaner look
+          });
+        };
       </script>
     </body>
     </html>
