@@ -152,7 +152,7 @@ export const getAuthOptions = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
             where: { email },
             include: { mfaMethods: { where: { type: "webauthn" } } }
         });
@@ -163,7 +163,7 @@ export const getAuthOptions = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        const allowCredentials = user.mfaMethods.map((mfa) => {
+        const allowCredentials = user.mfaMethods.map((mfa: any) => {
             const [credentialIdBase64] = mfa.secret.split(":");
             return {
                 id: credentialIdBase64,
@@ -214,7 +214,7 @@ export const verifyAuth = async (req: Request, res: Response, next: NextFunction
         await redis.del(`passkey:auth:challenge:${email}`);
 
         // Lookup user and credential
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
             where: { email },
             include: { mfaMethods: { where: { type: "webauthn" } } }
         });
@@ -227,7 +227,7 @@ export const verifyAuth = async (req: Request, res: Response, next: NextFunction
         const credentialIdStr = response.id; // Usually base64url encoded credential ID string provided by browser
 
         // Find the right passkey in db
-        const mfa = user.mfaMethods.find(m => m.secret.startsWith(`${credentialIdStr}:`));
+        const mfa = user.mfaMethods.find((m: any) => m.secret.startsWith(`${credentialIdStr}:`));
 
         if (!mfa) {
             res.status(400).json({ error: "Passkey not found for user" });

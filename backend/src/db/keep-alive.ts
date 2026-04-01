@@ -21,6 +21,28 @@ export async function runKeepAlive() {
       throw new Error("Redis data mismatch");
     }
 
+    // 3. Supabase PostgREST Ping (Ensures DB activity to prevent pausing)
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseAnonKey) {
+      const response = await fetch(`${supabaseUrl}/rest/v1/`, {
+        method: "GET",
+        headers: {
+          "apikey": supabaseAnonKey,
+          "Authorization": `Bearer ${supabaseAnonKey}`
+        }
+      });
+
+      if (response.ok) {
+        console.log(`[${timestamp}] ✅ Supabase PostgREST ping active.`);
+      } else {
+        console.warn(`[${timestamp}] ⚠️ Supabase PostgREST ping returned ${response.status}: ${response.statusText}`);
+      }
+    } else {
+      console.log(`[${timestamp}] ℹ️ Skipping PostgREST ping (SUPABASE_URL/ANON_KEY not set).`);
+    }
+
   } catch (error) {
     console.error(`[${timestamp}] ❌ Keep-Alive failed:`, error);
   }

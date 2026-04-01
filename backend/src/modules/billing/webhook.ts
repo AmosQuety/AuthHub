@@ -57,11 +57,11 @@ export const stripeWebhook = async (req: Request, res: Response, next: NextFunct
             providerSubscriptionId: subscription.id,
             planId: planId,
             status: subscription.status,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
           },
           update: {
             status: subscription.status,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
             planId: planId,
           }
         });
@@ -92,7 +92,7 @@ export const stripeWebhook = async (req: Request, res: Response, next: NextFunct
           where: { providerSubscriptionId: subscription.id },
           data: {
             status: subscription.status,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
             planId: planId,
           }
         });
