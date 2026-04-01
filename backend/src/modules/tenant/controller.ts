@@ -34,7 +34,7 @@ export const getTenantConfig = async (req: Request, res: Response, next: NextFun
         // 3. Resolve by UUID id
         else if (tenantId) {
             tenant = await prisma.tenant.findUnique({
-                where: { id: tenantId },
+                where: { id: tenantId as string },
                 select
             });
         }

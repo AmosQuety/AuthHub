@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api, ApiError } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
-import { Fingerprint, Loader2, ArrowLeft, Plus, Trash2, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Fingerprint, Loader2, ArrowLeft, Plus, CheckCircle2, ShieldCheck } from "lucide-react";
 
 // In a real app, this should come from package.json dependencies: "@simplewebauthn/browser"
 // We are dynamically importing it because we asked the user to install it in the background
@@ -22,8 +21,7 @@ try {
 }
 
 export default function PasskeySetup() {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+
   const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");

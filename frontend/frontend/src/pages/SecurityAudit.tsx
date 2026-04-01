@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../lib/api";
-import { TableSkeleton } from "../components/ui/TableSkeleton";
+
 import { ShieldAlert, CheckCircle2, XCircle, Clock, MapPin, Monitor, History, Loader2 } from "lucide-react";
 
 interface AuditLog {

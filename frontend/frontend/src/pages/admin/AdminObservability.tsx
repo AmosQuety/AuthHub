@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { api } from "../../lib/api";
+import { useEffect, useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  LineChart, Line, Legend, CartesianGrid, Area, AreaChart
+  Legend, CartesianGrid, Area, AreaChart
 } from "recharts";
 import { Activity, ShieldAlert, Users, Globe, TrendingUp } from "lucide-react";
 

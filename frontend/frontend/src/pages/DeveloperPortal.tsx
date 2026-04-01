@@ -19,8 +19,6 @@ import {
 import { 
   BarChart, 
   Bar, 
-  XAxis, 
-  YAxis, 
   Tooltip, 
   ResponsiveContainer,
   Cell
@@ -226,7 +224,7 @@ export default function DeveloperPortal() {
                       contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }} 
                     />
                     <Bar dataKey="logins" radius={[4, 4, 0, 0]}>
-                      {stats.chartData.map((entry, index) => (
+                      {stats.chartData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill="#3b82f6" fillOpacity={0.6 + (index / stats.chartData.length) * 0.4} />
                       ))}
                     </Bar>

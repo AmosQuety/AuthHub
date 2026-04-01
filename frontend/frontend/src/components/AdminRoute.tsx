@@ -1,7 +1,7 @@
 // src/components/AdminRoute.tsx
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { Loader2, BarChart3, Users, Globe, Settings2, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Loader2, BarChart3, Users, Globe, ArrowLeft, ShieldCheck } from "lucide-react";
 
 const navLinks = [
   { href: "/admin/users", label: "Users", icon: Users },
