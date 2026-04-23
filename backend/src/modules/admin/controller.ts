@@ -159,7 +159,13 @@ export const impersonateUser = async (req: Request, res: Response, next: NextFun
         });
 
         // Rule 2: Token Injection with 'act' claim (No Refresh Token)
-        const tokens = await generateTokens(targetUserId, `impersonation_${adminId}`, [], targetUser.roles, adminId);
+        const entitlements = await prisma.entitlement.findMany({
+            where: { userId: targetUserId, status: "active" },
+            select: { planId: true },
+        });
+        const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
+
+        const tokens = await generateTokens(targetUserId, `impersonation_${adminId}`, [], targetUser.roles, undefined, adminId, entitlementScopes);
 
         // Rule 3: User Transperancy Notifaction
         await sendMail({

@@ -79,7 +79,7 @@ export const authorizeRedirect = async (req: Request, res: Response, next: NextF
 export const authorize = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     // We expect the frontend consent screen to POST these params
-    const { client_id, response_type, redirect_uri, scope, code_challenge, code_challenge_method } = req.body;
+    const { client_id, response_type, redirect_uri, scope, code_challenge, code_challenge_method, nonce } = req.body;
 
     if (!req.user || !req.user.sub) {
       res.status(401).json({ error: "Unauthorized" });
@@ -165,11 +165,12 @@ export const authorize = async (req: Request, res: Response, next: NextFunction)
       scope: scope,
       clientId: client.clientId,
       redirectUri: redirect_uri,
+      nonce: nonce,
       // Store state for CSRF validation on token exchange
       state: stateParam,
     });
 
-    await redis.setex(`auth_code:${code}`, 600, data);
+    await redis.setex(`hub:auth_code:${code}`, 60, data);
 
     // Instead of redirecting directly, we return the redirect URL to the React frontend.
     // The frontend will perform the actual window.location redirect.
@@ -229,7 +230,7 @@ export const token = async (req: Request, res: Response, next: NextFunction): Pr
       }
 
       // Retrieve Code from Redis
-      const codeDataStr = await redis.get(`auth_code:${code}`);
+      const codeDataStr = await redis.get(`hub:auth_code:${code}`);
       if (!codeDataStr) {
         res.status(400).json({ error: "invalid_grant", error_description: "Invalid or expired authorization code" });
         return;
@@ -263,25 +264,37 @@ export const token = async (req: Request, res: Response, next: NextFunction): Pr
         return;
       }
 
-      await redis.del(`auth_code:${code}`);
+      await redis.del(`hub:auth_code:${code}`);
 
       // Create session, attach client scope if present
       const requestedScopes = codeData.scope ? String(codeData.scope).split(" ") : [];
       // Intersect requested scopes with permitted scopes on client
       const grantedScopes = requestedScopes.filter((s) => client.scopes.includes(s));
 
-      const session = await prisma.session.create({
-        data: {
-          userId: codeData.userId,
-          refreshTokenHash: "pending",
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-          deviceInfo: req.headers["user-agent"] || "unknown",
-          ipAddress: req.ip || "unknown",
-        },
-      });
+      const sessionId = crypto.randomUUID();
 
       // Generate tokens with scopes
-      const { accessToken, refreshToken: newRefreshToken } = await generateTokens(codeData.userId, session.id, grantedScopes);
+      const entitlements = await prisma.entitlement.findMany({
+        where: { userId: codeData.userId, status: "active" },
+        select: { planId: true },
+      });
+      const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
+
+      const { accessToken, refreshToken: newRefreshToken } = await generateTokens(codeData.userId, sessionId, grantedScopes, undefined, undefined, undefined, entitlementScopes);
+      const refreshTokenHash = await hashPassword(newRefreshToken);
+
+      await prisma.$transaction(async (tx) => {
+        await tx.session.create({
+          data: {
+            id: sessionId,
+            userId: codeData.userId,
+            refreshTokenHash,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+            deviceInfo: req.headers["user-agent"] || "unknown",
+            ipAddress: req.ip || "unknown",
+          },
+        });
+      });
 
       let userProfile = undefined;
       if (grantedScopes.includes("email")) {
@@ -291,12 +304,8 @@ export const token = async (req: Request, res: Response, next: NextFunction): Pr
 
       const idToken = await generateIdToken(codeData.userId, client_id, codeData.nonce, userProfile, grantedScopes);
 
-      const refreshTokenHash = await hashPassword(newRefreshToken);
-      await prisma.session.update({
-        where: { id: session.id },
-        data: { refreshTokenHash },
-      });
-
+      res.set("Cache-Control", "no-store");
+      res.set("Pragma", "no-cache");
       res.json({
         access_token: accessToken,
         token_type: "Bearer",
@@ -311,6 +320,8 @@ export const token = async (req: Request, res: Response, next: NextFunction): Pr
         return;
       }
 
+      res.set("Cache-Control", "no-store");
+      res.set("Pragma", "no-cache");
       let payload;
       try {
         payload = await verifyToken(refresh_token);
@@ -343,27 +354,33 @@ export const token = async (req: Request, res: Response, next: NextFunction): Pr
         return;
       }
 
-      await prisma.session.delete({ where: { id: sessionId } });
+      const newSessionId = crypto.randomUUID();
 
-      const newSession = await prisma.session.create({
-        data: {
-          userId,
-          refreshTokenHash: "pending",
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Extended 7 days
-          deviceInfo: oldSession.deviceInfo,
-          ipAddress: req.ip || "unknown",
-        },
+      const entitlements = await prisma.entitlement.findMany({
+        where: { userId: userId, status: "active" },
+        select: { planId: true },
       });
+      const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
 
       // Default to empty scopes on refresh unless we persist scopes to the session DB.
       // For now, assume [] or we'd need to add `scopes` to the Session model to fully persist them.
       // Passing [] since we don't have session scopes tracked in the DB yet in this phase.
-      const { accessToken, refreshToken: newRefreshToken } = await generateTokens(userId, newSession.id, []);
-
+      const { accessToken, refreshToken: newRefreshToken } = await generateTokens(userId, newSessionId, [], undefined, undefined, undefined, entitlementScopes);
       const newRefreshTokenHash = await hashPassword(newRefreshToken);
-      await prisma.session.update({
-        where: { id: newSession.id },
-        data: { refreshTokenHash: newRefreshTokenHash },
+
+      await prisma.$transaction(async (tx) => {
+        await tx.session.create({
+          data: {
+            id: newSessionId,
+            userId,
+            refreshTokenHash: newRefreshTokenHash,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Extended 7 days
+            deviceInfo: oldSession.deviceInfo,
+            ipAddress: req.ip || "unknown",
+          },
+        });
+
+        await tx.session.delete({ where: { id: sessionId } });
       });
 
       res.json({

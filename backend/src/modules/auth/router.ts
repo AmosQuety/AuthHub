@@ -7,7 +7,7 @@ import adminRouter from "../admin/router.js";
 import tenantRouter from "../tenant/router.js";
 import { authenticate } from "../../middlewares/authenticate.js";
 import { validate } from "../../middlewares/validate.js";
-import { loginLimiter, registerLimiter, refreshLimiter, authLimiter } from "../../middlewares/rateLimiter.js";
+import { loginLimiter, registerLimiter, refreshLimiter, authLimiter, introspectLimiter, revokeLimiter } from "../../middlewares/rateLimiter.js";
 import { registerSchema, loginSchema } from "./schema.js";
 
 const router = Router();
@@ -21,8 +21,8 @@ router.post("/login", loginLimiter, validate(loginSchema), login);
 router.post("/refresh", refreshLimiter, refresh);
 
 // --- OAuth 2.0 Token Management ---
-router.post("/revoke", revokeToken);
-router.post("/introspect", introspectToken);
+router.post("/revoke", revokeLimiter, revokeToken);
+router.post("/introspect", introspectLimiter, introspectToken);
 
 // --- SOCIAL LOGIN ---
 router.get("/google", googleLogin);

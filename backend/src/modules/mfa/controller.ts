@@ -157,22 +157,26 @@ export const challengeTotp = async (req: Request, res: Response, next: NextFunct
         }
 
         // 4. Success! Issue standard tokens (same logic as end of /login)
+        const sessionId = crypto.randomUUID();
+
+        const entitlements = await prisma.entitlement.findMany({
+            where: { userId, status: "active" },
+            select: { planId: true },
+        });
+        const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
+
+        const { accessToken, refreshToken } = await generateTokens(userId, sessionId, [], undefined, undefined, undefined, entitlementScopes);
+        const refreshTokenHash = await hashPassword(refreshToken);
+
         const session = await prisma.session.create({
             data: {
+                id: sessionId,
                 userId,
-                refreshTokenHash: "pending",
+                refreshTokenHash,
                 expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
                 deviceInfo: req.headers["user-agent"] || "unknown",
                 ipAddress: req.ip || "unknown",
             },
-        });
-
-        const { accessToken, refreshToken } = await generateTokens(userId, session.id);
-
-        const refreshTokenHash = await hashPassword(refreshToken);
-        await prisma.session.update({
-            where: { id: session.id },
-            data: { refreshTokenHash },
         });
 
         res.cookie("refreshToken", refreshToken, {

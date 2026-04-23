@@ -13,7 +13,7 @@ import { generateTokens, hashPassword } from "../../core/crypto.js";
 
 // Relying Party Configuration
 const rpName = "AuthHub";
-const rpID = process.env.BASE_URL ? new URL(process.env.BASE_URL).hostname : "localhost";
+const rpID = (() => { try { return process.env.BASE_URL ? new URL(process.env.BASE_URL).hostname : "localhost"; } catch { return "localhost"; } })();
 const origin = process.env.FRONTEND_URL || `http://${rpID}:3001`;
 
 // --- REGISTRATION FLOW ---
@@ -39,7 +39,7 @@ export const getRegistrationOptions = async (req: Request, res: Response, next: 
         const { email } = user;
 
         // Build list of existing credentials to exclude them
-        const excludeCredentials = user.mfaMethods.map((mfa) => ({
+        const excludeCredentials = user.mfaMethods.map((mfa: any) => ({
             id: mfa.secret.split(":")[0], // Keep as base64url encoded string
             type: "public-key" as const,
         }));
@@ -62,7 +62,7 @@ export const getRegistrationOptions = async (req: Request, res: Response, next: 
         const passkeyOptions = await generateRegistrationOptions(options);
 
         // Cache the challenge in Redis for 5 minutes, keyed to the user ID
-        await redis.setex(`passkey:challenge:${userId}`, 300, passkeyOptions.challenge);
+        await redis.setex(`hub:passkey:challenge:${userId}`, 300, passkeyOptions.challenge);
 
         res.json(passkeyOptions);
     } catch (error) {
@@ -82,14 +82,14 @@ export const verifyRegistration = async (req: Request, res: Response, next: Next
         const body = req.body; // The response from navigator.credentials.create()
 
         // 1. Retrieve the expected challenge from Redis
-        const expectedChallenge = await redis.get(`passkey:challenge:${userId}`);
+        const expectedChallenge = await redis.get(`hub:passkey:challenge:${userId}`);
         if (!expectedChallenge) {
             res.status(400).json({ error: "Registration challenge expired or missing" });
             return;
         }
 
         // 2. Clear it from Redis so it can't be reused
-        await redis.del(`passkey:challenge:${userId}`);
+        await redis.del(`hub:passkey:challenge:${userId}`);
 
         // 3. Verify the response
         let verification;
@@ -186,7 +186,7 @@ export const getAuthOptions = async (req: Request, res: Response, next: NextFunc
 
         // Cache the challenge by email.
         // Using email here because the user is not authenticated yet.
-        await redis.setex(`passkey:auth:challenge:${email}`, 300, passkeyAuthOptions.challenge);
+        await redis.setex(`hub:passkey:auth:challenge:${email}`, 300, passkeyAuthOptions.challenge);
 
         res.json(passkeyAuthOptions);
     } catch (error) {
@@ -203,7 +203,7 @@ export const verifyAuth = async (req: Request, res: Response, next: NextFunction
             return;
         }
 
-        const expectedChallenge = await redis.get(`passkey:auth:challenge:${email}`);
+        const expectedChallenge = await redis.get(`hub:passkey:auth:challenge:${email}`);
         if (!expectedChallenge) {
             res.status(400).json({ error: "Authentication challenge expired or missing" });
             return;
@@ -211,7 +211,7 @@ export const verifyAuth = async (req: Request, res: Response, next: NextFunction
 
         // Don't delete challenge yet, want to avoid race conditions if query fails?
         // Actually, delete to prevent replay.
-        await redis.del(`passkey:auth:challenge:${email}`);
+        await redis.del(`hub:passkey:auth:challenge:${email}`);
 
         // Lookup user and credential
         const user = await prisma.user.findFirst({
@@ -277,22 +277,26 @@ export const verifyAuth = async (req: Request, res: Response, next: NextFunction
         // Note: We bypass the TOTP MFA check here because Passkeys inherently act 
         // as strong multi-factor authentication (Biometric/PIN + Device).
 
+        const sessionId = crypto.randomUUID();
+
+        const entitlements = await prisma.entitlement.findMany({
+            where: { userId: user.id, status: "active" },
+            select: { planId: true },
+        });
+        const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
+
+        const { accessToken, refreshToken } = await generateTokens(user.id, sessionId, [], user.roles, undefined, undefined, entitlementScopes);
+        const refreshTokenHash = await hashPassword(refreshToken);
+
         const session = await prisma.session.create({
             data: {
+                id: sessionId,
                 userId: user.id,
-                refreshTokenHash: "pending",
+                refreshTokenHash,
                 expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
                 deviceInfo: req.headers["user-agent"] || "unknown",
                 ipAddress: req.ip || "unknown",
             },
-        });
-
-        const { accessToken, refreshToken } = await generateTokens(user.id, session.id, [], user.roles);
-
-        const refreshTokenHash = await hashPassword(refreshToken);
-        await prisma.session.update({
-            where: { id: session.id },
-            data: { refreshTokenHash },
         });
 
         res.cookie("refreshToken", refreshToken, {

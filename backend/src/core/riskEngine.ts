@@ -37,7 +37,7 @@ export class RiskEngine {
         const currentCountry = currentGeo?.country || "UNKNOWN";
 
         const knownCountries = new Set<string>();
-        recentSessions.forEach(session => {
+        recentSessions.forEach((session: any) => {
             if (session.ipAddress && session.ipAddress !== "127.0.0.1" && session.ipAddress !== "::1") {
                 const geo = geoip.lookup(session.ipAddress);
                 if (geo?.country) knownCountries.add(geo.country);
@@ -50,7 +50,7 @@ export class RiskEngine {
 
         // 3. User-Agent / Device Anomaly Detection (+30 pts)
         const knownUserAgents = new Set<string>();
-        recentSessions.forEach(session => {
+        recentSessions.forEach((session: any) => {
             if (session.deviceInfo) knownUserAgents.add(session.deviceInfo);
         });
 

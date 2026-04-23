@@ -9,8 +9,17 @@ import prisma from "../db/client.js";
 // Prepended to the plain text so the DB hash is worthless without the secret.
 const PEPPER = process.env.ARGON2_PEPPER ?? "";
 
+const ARGON2_OPTIONS =
+  process.env.NODE_ENV === "test"
+    ? {
+        timeCost: 2,
+        memoryCost: 1024,
+        parallelism: 1,
+      }
+    : undefined;
+
 export const hashPassword = async (password: string): Promise<string> => {
-  return await argon2.hash(PEPPER + password);
+  return await argon2.hash(PEPPER + password, ARGON2_OPTIONS);
 };
 
 export const verifyPassword = async (hash: string, plain: string): Promise<boolean> => {
@@ -86,19 +95,20 @@ export const getPublicJwk = async () => {
 
 // Generates a short-lived access token and a rotating refresh token.
 // The refresh token embeds the sessionId so logout can target a single session.
-export const generateTokens = async (userId: string, sessionId: string, scopes: string[] = [], roles: string[] = ["USER"], name?: string | null, impersonatorId?: string) => {
+export const generateTokens = async (
+  userId: string, 
+  sessionId: string, 
+  scopes: string[] = [], 
+  roles: string[] = ["USER"], 
+  name?: string | null, 
+  impersonatorId?: string,
+  entitlementScopes: string[] = []
+) => {
   const key = await getPrivateKey();
   const kid = await getKeyId();
   const issuer = process.env.BASE_URL || "http://localhost:3000";
 
-  // Feature 1: Entitlement Sync. Automatically append active billing plans to scopes.
-  const entitlements = await prisma.entitlement.findMany({
-    where: { userId, status: "active" },
-    select: { planId: true }
-  });
-  
-  const activePlanScopes = entitlements.map((e: any) => e.planId);
-  const finalScopes = Array.from(new Set([...scopes, ...activePlanScopes]));
+  const finalScopes = Array.from(new Set([...scopes, ...entitlementScopes]));
 
   const accessPayload: any = { sub: userId, roles };
   if (name) {

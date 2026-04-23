@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 import authRouter from "./modules/auth/router.js";
 import oidcRouter from "./modules/oidc/router.js";
 import oauthRouter from "./modules/oauth/router.js";
@@ -14,6 +15,8 @@ import prisma from "./db/client.js";
 import cron from "node-cron";
 import { runKeepAlive } from "./db/keep-alive.js";
 import { openApiSpec } from "./docs/openapi.js";
+import redis from "./db/redis.js";
+import logger from "./core/logger.js";
 
 dotenv.config();
 
@@ -70,23 +73,55 @@ app.use(
     credentials: true,
   })
 );
+
+// High Performance I/O — Compress all responses
 app.use(cookieParser());
+
+app.use(
+  compression({
+    filter: (req, res) => {
+      // Never compress the webhook route — Stripe needs the raw body
+      if (req.path.startsWith("/api/v1/webhooks")) return false;
+      return compression.filter(req, res);
+    },
+  })
+);
 
 // Webhooks must be mounted before expressive.json() so Stripe can read the raw buffer
 app.use("/api/v1/webhooks", billingRouter);
 
 // Body Parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // OAuth clients often send form-urlencoded
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" })); // OAuth clients often send form-urlencoded
+
+// Security: Prevent sensitive API responses from being cached
+app.use("/api", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+});
 
 // Routes
-app.get("/health", async (req, res) => {
+app.get("/health", async (_req, res) => {
   try {
-    // Check DB connection
-    await prisma.$queryRaw`SELECT 1`;
-    res.json({ status: "ok", database: "connected", timestamp: new Date() });
+    await Promise.all([
+      prisma.$queryRaw`SELECT 1`,
+      redis.ping(),
+    ]);
+    res.json({
+      status: "ok",
+      database: "connected",
+      cache: "connected",
+      timestamp: new Date()
+    });
   } catch (error) {
-    res.status(500).json({ status: "error", database: "disconnected", error: String(error) });
+    res.status(500).json({
+      status: "error",
+      database: "unknown",
+      cache: "unknown",
+      error: String(error)
+    });
   }
 });
 
@@ -165,7 +200,7 @@ app.use(errorHandler);
 // Start Server
 if (process.env.NODE_ENV !== "test") {
   const server = app.listen(PORT as number, "0.0.0.0", () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
+    logger.info({ port: PORT, host: "0.0.0.0" }, "server_started");
     
     // Database & Redis Keep-Alive (every 6 hours)
     cron.schedule("0 */6 * * *", () => {
@@ -178,15 +213,15 @@ if (process.env.NODE_ENV !== "test") {
 
   // Graceful Shutdown routines for containerized deployments (Docker/Kubernetes)
   const gracefulShutdown = () => {
-    console.log("Received kill signal, shutting down gracefully.");
+    logger.info("received_kill_signal_shutting_down_gracefully");
     server.close(async () => {
-      console.log("Closed out remaining HTTP connections.");
+      logger.info("closed_out_remaining_http_connections");
       try {
         await prisma.$disconnect();
-        console.log("Prisma connection closed.");
+        logger.info("prisma_connection_closed");
         process.exit(0);
       } catch (err) {
-        console.error("Error during graceful shutdown", err);
+        logger.error({ err }, "error_during_graceful_shutdown");
         process.exit(1);
       }
     });

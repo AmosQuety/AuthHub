@@ -5,6 +5,7 @@ import { hashPassword, verifyPassword, generateTokens, verifyToken, generateMfaT
 import { RiskEngine } from "../../core/riskEngine.js";
 import { AuditService } from "../../core/audit.js";
 import { BruteForceService } from "../../middlewares/rateLimiter.js";
+import logger from "../../core/logger.js";
 
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -90,7 +91,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     });
 
     if (!user || !user.passwordHash) {
-      console.log(`[AUTH] Login failed: User not found for email ${email}`);
+      logger.info({ email }, "login_failed_user_not_found");
       // Record failure even for unknown emails to prevent user enumeration via timing
       await BruteForceService.recordFailure(email);
       res.status(401).json({ error: "Invalid credentials" });
@@ -100,7 +101,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     const isValid = await verifyPassword(user.passwordHash, password);
 
     if (!isValid) {
-      console.log(`[AUTH] Login failed: Password mismatch for email ${email}`);
+      logger.info({ email, userId: user.id }, "login_failed_password_mismatch");
       // Record this failure for per-account brute-force tracking
       await BruteForceService.recordFailure(email);
       AuditService.log({
@@ -167,32 +168,36 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     }
     // --- End MFA Check ---
 
-    // 1. Create session record first so we have the sessionId for the token
-    const sessionPayload: any = {
-      userId: user.id,
-      refreshTokenHash: "pending", // Temporary — updated below once we have the token
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      deviceInfo,
-      ipAddress,
-      riskScore, // Added for audit trails
-    };
+    // 1. Manually generate sessionId for atomicity
+    const sessionId = crypto.randomUUID();
 
-    const session = await prisma.session.create({
-      data: sessionPayload,
+    // 2. Lookup entitlements for token generation
+    const entitlements = await prisma.entitlement.findMany({
+      where: { userId: user.id, status: "active" },
+      select: { planId: true },
     });
+    const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
 
-    // 2. Generate tokens now that we have sessionId
-    const { accessToken, refreshToken } = await generateTokens(user.id, session.id, [], user.roles, user.name);
-
-    // 3. Store hashed refresh token in the session
+    const { accessToken, refreshToken } = await generateTokens(user.id, sessionId, [], user.roles, user.name, undefined, entitlementScopes);
     const refreshTokenHash = await hashPassword(refreshToken);
-    await prisma.session.update({
-      where: { id: session.id },
-      data: { refreshTokenHash },
+
+    const session = await prisma.$transaction(async (tx) => {
+      // 4. Create session record atomically
+      return await tx.session.create({
+        data: {
+          id: sessionId,
+          userId: user.id,
+          refreshTokenHash,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+          deviceInfo,
+          ipAddress,
+          riskScore,
+        },
+      });
     });
 
     // 4. Cache user profile in Redis for fast /me lookups
-    await redis.setex(`user:${user.id}:profile`, 3600, JSON.stringify({
+    await redis.setex(`hub:user:${user.id}:profile`, 3600, JSON.stringify({
       id: user.id,
       email: user.email,
       emailVerified: user.emailVerified,
@@ -216,6 +221,8 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    res.set("Cache-Control", "no-store");
+    res.set("Pragma", "no-cache");
     res.json({
       message: "Login successful",
       accessToken,
@@ -241,7 +248,7 @@ export const me = async (req: Request, res: Response, next: NextFunction): Promi
     const userId = req.user.sub;
 
     // Try Redis cache first
-    const cachedProfile = await redis.get(`user:${userId}:profile`);
+    const cachedProfile = await redis.get(`hub:user:${userId}:profile`);
     if (cachedProfile) {
       res.json({ user: JSON.parse(cachedProfile) });
       return;
@@ -264,7 +271,7 @@ export const me = async (req: Request, res: Response, next: NextFunction): Promi
       return;
     }
 
-    await redis.setex(`user:${userId}:profile`, 3600, JSON.stringify(user));
+    await redis.setex(`hub:user:${userId}:profile`, 3600, JSON.stringify(user));
     res.json({ user });
   } catch (error) {
     next(error);
@@ -286,7 +293,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction): P
 
       if (payload.sub) {
         // Delete Redis profile cache
-        await redis.del(`user:${payload.sub}:profile`);
+        await redis.del(`hub:user:${payload.sub}:profile`);
 
         // Target only the specific session via the sid claim embedded in the token
         const sessionId = payload.sid as string | undefined;
@@ -362,7 +369,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
     if (!isValidHash) {
       // THEFT DETECTED: The token is structurally valid but the DB hash does not match.
       // This means the token was already rotated and someone (an attacker) is trying to use the old, stolen one.
-      console.warn(`[SECURITY] Refresh token replay detected for user ${userId}. Revoking entire family.`);
+      logger.warn({ userId, sessionId }, "refresh_token_replay_detected");
 
       // Nuke ALL sessions for this user to halt the attacker
       await prisma.session.deleteMany({ where: { userId } });
@@ -380,21 +387,9 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
       return;
     }
 
-    // 3. Token Rotation — delete old session, create new one
-    // We use deleteMany to avoid throwing if the session was already removed by a concurrent request
-    await prisma.session.deleteMany({ where: { id: sessionId } });
+    // 3. Token Rotation — atomic creation
+    const newSessionId = crypto.randomUUID();
 
-    const newSession = await prisma.session.create({
-      data: {
-        userId: userId,
-        refreshTokenHash: "pending",
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Extended 7 days
-        deviceInfo: oldSession.deviceInfo, // Inherit device context
-        ipAddress: req.ip || "unknown",   // Update to current IP
-      },
-    });
-
-    // 4. Fetch the user to retrieve current roles
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -404,14 +399,28 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
       return;
     }
 
-    // 5. Generate fresh tokens linked to the new session
-    const { accessToken, refreshToken: newRefreshToken } = await generateTokens(userId, newSession.id, [], user.roles, user.name);
+    const entitlements = await prisma.entitlement.findMany({
+      where: { userId: userId, status: "active" },
+      select: { planId: true },
+    });
+    const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
 
-    // 5. Hash and save new refresh token
+    const { accessToken, refreshToken: newRefreshToken } = await generateTokens(userId, newSessionId, [], user.roles, user.name, undefined, entitlementScopes);
     const newRefreshTokenHash = await hashPassword(newRefreshToken);
-    await prisma.session.update({
-      where: { id: newSession.id },
-      data: { refreshTokenHash: newRefreshTokenHash },
+
+    await prisma.$transaction(async (tx) => {
+      await tx.session.create({
+        data: {
+          id: newSessionId,
+          userId: userId,
+          refreshTokenHash: newRefreshTokenHash,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Extended 7 days
+          deviceInfo: oldSession.deviceInfo,
+          ipAddress: req.ip || "unknown",
+        },
+      });
+
+      await tx.session.delete({ where: { id: sessionId } });
     });
 
     // 6. Set new cookie
@@ -422,6 +431,8 @@ export const refresh = async (req: Request, res: Response, next: NextFunction): 
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    res.set("Cache-Control", "no-store");
+    res.set("Pragma", "no-cache");
     res.json({
       accessToken,
       message: "Token refreshed successfully",
@@ -531,7 +542,7 @@ export const sendVerificationEmail = async (req: Request, res: Response, next: N
     const token = randomBytes(32).toString("hex");
     const ttl = 24 * 60 * 60; // 24 hours in seconds
 
-    await redis.setex(`email_verify:${token}`, ttl, userId);
+    await redis.setex(`hub:email_verify:${token}`, ttl, userId);
 
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
     const verifyUrl = `${frontendUrl}/verify-email?token=${token}`;
@@ -561,7 +572,7 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    const userId = await redis.get(`email_verify:${token}`);
+    const userId = await redis.get(`hub:email_verify:${token}`);
     if (!userId) {
       res.status(400).json({ error: "Invalid or expired verification token" });
       return;
@@ -573,10 +584,10 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
     });
 
     // Invalidate token immediately (single-use)
-    await redis.del(`email_verify:${token}`);
+    await redis.del(`hub:email_verify:${token}`);
 
     // Bust Redis profile cache so /me returns fresh data
-    await redis.del(`user:${userId}:profile`);
+    await redis.del(`hub:user:${userId}:profile`);
 
     AuditService.log({
       userId,
@@ -621,7 +632,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     const token = randomBytes(32).toString("hex");
     const ttl = 60 * 60; // 1 hour in seconds
 
-    await redis.setex(`pwd_reset:${token}`, ttl, user.id);
+    await redis.setex(`hub:pwd_reset:${token}`, ttl, user.id);
 
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
@@ -663,7 +674,7 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
       return;
     }
 
-    const userId = await redis.get(`pwd_reset:${token}`);
+    const userId = await redis.get(`hub:pwd_reset:${token}`);
     if (!userId) {
       res.status(400).json({ error: "Invalid or expired reset token" });
       return;
@@ -680,10 +691,10 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     await prisma.session.deleteMany({ where: { userId } });
 
     // Invalidate the reset token (single-use)
-    await redis.del(`pwd_reset:${token}`);
+    await redis.del(`hub:pwd_reset:${token}`);
 
     // Bust profile cache
-    await redis.del(`user:${userId}:profile`);
+    await redis.del(`hub:user:${userId}:profile`);
 
     AuditService.log({
       userId,
@@ -718,7 +729,7 @@ export const getSessions = async (req: Request, res: Response, next: NextFunctio
     });
 
     // Parse User-Agent string to structured device info for the frontend
-    const parsedSessions = sessions.map(session => {
+    const parsedSessions = sessions.map((session: any) => {
       const uaString = session.deviceInfo || "";
       let browser = "Unknown Browser";
       let os = "Unknown OS";

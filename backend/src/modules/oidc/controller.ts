@@ -2,10 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import prisma from "../../db/client.js";
 import { getPublicJwk } from "../../core/crypto.js";
 
+const OIDC_CACHE = "public, max-age=3600, stale-while-revalidate=86400";
+
 export const getJwks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const jwk = await getPublicJwk(); // Already includes kid (RFC 7638 thumbprint)
     // Wrap in "keys" array as per JWKS standard (RFC 7517)
+    res.set("Cache-Control", OIDC_CACHE);
+    res.set("Vary", "Accept-Encoding");
     res.json({ keys: [{ ...jwk, use: "sig", alg: "RS256" }] });
   } catch (error) {
     next(error);
@@ -30,6 +34,8 @@ export const getOpenIdConfiguration = (req: Request, res: Response): void => {
     claims_supported: ["sub", "iss", "email", "email_verified"],
   };
 
+  res.set("Cache-Control", OIDC_CACHE);
+  res.set("Vary", "Accept-Encoding");
   res.json(config);
 };
 
