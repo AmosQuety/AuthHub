@@ -5,7 +5,7 @@ async function listClients() {
   try {
     const clients = await prisma.oAuthClient.findMany();
     console.log(`Found ${clients.length} clients.`);
-    clients.forEach(c => {
+    clients.forEach((c: any) => {
       console.log(`- ID: ${c.clientId} | Name: ${c.name}`);
     });
   } catch (err) {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
-import app from "../../index.js";
+import app from "../index.js";
 import prisma from "../db/client.js";
 import redis from "../db/redis.js";
 
@@ -89,7 +89,7 @@ describe("POST /api/v1/auth/refresh", () => {
     const loginRes = await loginUser(email);
 
     // Extract refreshToken cookie set by login
-    const cookies = loginRes.headers["set-cookie"] as string[] | undefined;
+    const cookies = loginRes.headers["set-cookie"] as unknown as string[] | undefined;
     expect(cookies).toBeTruthy();
 
     const res = await request(app)

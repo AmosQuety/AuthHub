@@ -54,7 +54,7 @@ export const createClient = async (req: Request, res: Response, next: NextFuncti
         const webhookSecret = randomBytes(20).toString("hex");
 
         // ── Atomic transaction: Tenant + OAuthClient created together ────────
-        const result = await prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx: any) => {
             // 1. Create the isolated tenant space
             const tenant = await tx.tenant.create({
                 data: {
@@ -155,7 +155,7 @@ export const deleteClient = async (req: Request, res: Response, next: NextFuncti
         }
 
         // Use a transaction to delete BOTH the OAuthClient and the linked Tenant
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: any) => {
              await tx.oAuthClient.delete({
                  where: { clientId: id }
              });
@@ -346,7 +346,7 @@ export const getStats = async (req: Request, res: Response, next: NextFunction):
             select: { clientId: true, name: true }
         });
 
-        const clientIds = clients.map(c => c.clientId);
+        const clientIds = clients.map((c: any) => c.clientId);
         const since = subDays(new Date(), 7);
 
         // Aggregate successful logins for these clients
@@ -356,7 +356,7 @@ export const getStats = async (req: Request, res: Response, next: NextFunction):
                 action: "LOGIN_SUCCESS",
                 createdAt: { gte: since },
                 // This is a fuzzy search in the Json field for the client ID
-                OR: clientIds.map(id => ({
+                OR: clientIds.map((id: any) => ({
                    details: { path: ["clientId"], equals: id } as any
                 }))
             },

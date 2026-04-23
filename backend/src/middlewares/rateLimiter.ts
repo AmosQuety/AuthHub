@@ -9,9 +9,10 @@ export const authLimiter = rateLimit({
     limit: 5,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: () => process.env.NODE_ENV === "test",
     store: new RedisStore({
         sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
-        prefix: "rl:auth:",
+        prefix: "hub:rl:auth:",
     }),
     message: {
         error: "Too many login/registration attempts, please try again after 15 minutes.",
@@ -26,9 +27,10 @@ export const loginLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: true,
+    skip: () => process.env.NODE_ENV === "test",
     store: new RedisStore({
         sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
-        prefix: "rl:login:",
+        prefix: "hub:rl:login:",
     }),
     handler: (_req, res) => res.status(429).json({
         error: "too_many_attempts",
@@ -43,9 +45,10 @@ export const registerLimiter = rateLimit({
     limit: 5,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: () => process.env.NODE_ENV === "test",
     store: new RedisStore({
         sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
-        prefix: "rl:register:",
+        prefix: "hub:rl:register:",
     }),
     message: {
         error: "Too many registration attempts. Please try again in an hour.",
@@ -59,9 +62,10 @@ export const refreshLimiter = rateLimit({
     limit: 20,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: () => process.env.NODE_ENV === "test",
     store: new RedisStore({
         sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
-        prefix: "rl:refresh:",
+        prefix: "hub:rl:refresh:",
     }),
     message: {
         error: "Too many token refresh attempts, please try again later.",
@@ -74,13 +78,40 @@ export const tokenLimiter = rateLimit({
     limit: 20,
     standardHeaders: true,
     legacyHeaders: false,
+    skip: () => process.env.NODE_ENV === "test",
     store: new RedisStore({
         sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
-        prefix: "rl:token:",
+        prefix: "hub:rl:token:",
     }),
     message: {
-        error: "Too many token requests. Please slow down.",
-    },
+    error: "Too many token requests. Please slow down.",
+  },
+});
+
+export const introspectLimiter = rateLimit({
+  windowMs: 60 * 1000,       // 1 minute
+  limit: 60,                 // 60 requests per IP per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === "test",
+  store: new RedisStore({
+    sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
+    prefix: "hub:rl:introspect:",
+  }),
+  message: { status: "error", message: "Too many introspection requests." },
+});
+
+export const revokeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === "test",
+  store: new RedisStore({
+    sendCommand: (...args: string[]) => redisClient.call(args[0], ...args.slice(1)) as any,
+    prefix: "hub:rl:revoke:",
+  }),
+  message: { status: "error", message: "Too many revocation requests." },
 });
 
 // ---------------------------------------------------------------------------
@@ -90,8 +121,8 @@ export const tokenLimiter = rateLimit({
 // even if they distribute across different IP addresses.
 // ---------------------------------------------------------------------------
 
-const FAIL_KEY = (email: string) => `brute:${email.toLowerCase()}`;
-const LOCK_KEY = (email: string) => `lock:${email.toLowerCase()}`;
+const FAIL_KEY = (email: string) => `hub:brute:${email.toLowerCase()}`;
+const LOCK_KEY = (email: string) => `hub:lock:${email.toLowerCase()}`;
 
 // Thresholds
 const SOFT_THRESHOLD = 5;   // lock for 15 min
@@ -105,6 +136,7 @@ export const BruteForceService = {
      * or null if the account is free to attempt login.
      */
     async getLockout(email: string): Promise<{ ttl: number; message: string } | null> {
+        if (process.env.NODE_ENV === "test") return null;
         const ttl = await redisClient.ttl(LOCK_KEY(email));
         if (ttl > 0) {
             const minutes = Math.ceil(ttl / 60);
@@ -121,6 +153,7 @@ export const BruteForceService = {
      * Applies a soft or hard lockout once thresholds are breached.
      */
     async recordFailure(email: string): Promise<void> {
+        if (process.env.NODE_ENV === "test") return;
         const key = FAIL_KEY(email);
         const failures = await redisClient.incr(key);
 

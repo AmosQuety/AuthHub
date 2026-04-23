@@ -108,41 +108,26 @@ export const getRiskTrends = async (req: Request, res: Response, next: NextFunct
     const daysToLookBack = 14;
     const since = subDays(startOfDay(new Date()), daysToLookBack);
 
-    // Fetch daily aggregates for SUCCESS vs BLOCKED.
-    // In raw SQL we'd group by DATE_TRUNC, in Prisma we pull minimal info and bucket
-    const logs = await prisma.auditLog.findMany({
-      where: {
-        createdAt: { gte: since },
-        action: { in: ["LOGIN_ATTEMPT", "LOGIN_SUCCESS", "LOGIN_FAILED", "MFA_FAILED"] },
-      },
-      select: {
-        createdAt: true,
-        status: true,
-      }
-    });
+    // Fetch daily aggregates using raw SQL for performance
+    const trends: any[] = await prisma.$queryRaw`
+      SELECT 
+        DATE_TRUNC('day', "created_at")::text as date,
+        COUNT(*) FILTER (WHERE status = 'SUCCESS')::int as success,
+        COUNT(*) FILTER (WHERE status = 'FAILURE')::int as failed,
+        COUNT(*) FILTER (WHERE status = 'BLOCKED')::int as blocked
+      FROM audit_logs
+      WHERE "created_at" >= ${since}
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `;
 
-    // Bucket by day
-    const trendMap: Record<string, { date: string, success: number, blocked: number, failed: number }> = {};
+    // Ensure we return the 'date' in YYYY-MM-DD format as the frontend expects
+    const formattedTrends = trends.map(t => ({
+      ...t,
+      date: t.date.split(" ")[0] // Handle PostgreSQL timestamp string
+    }));
 
-    // Initialize 14 days
-    for (let i = 0; i <= daysToLookBack; i++) {
-      const d = startOfDay(subDays(new Date(), i)).toISOString().split("T")[0];
-      trendMap[d] = { date: d, success: 0, blocked: 0, failed: 0 };
-    }
-
-    for (const log of logs) {
-      const day = startOfDay(log.createdAt).toISOString().split("T")[0];
-      if (trendMap[day]) {
-        if (log.status === "SUCCESS") trendMap[day].success += 1;
-        else if (log.status === "BLOCKED") trendMap[day].blocked += 1;
-        else if (log.status === "FAILURE") trendMap[day].failed += 1;
-      }
-    }
-
-    // Sort chronologically (oldest to newest)
-    const trends = Object.values(trendMap).sort((a, b) => a.date.localeCompare(b.date));
-
-    res.json(trends);
+    res.json(formattedTrends);
   } catch (error) {
     next(error);
   }
