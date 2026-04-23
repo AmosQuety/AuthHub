@@ -109,21 +109,26 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
         });
 
         // 4. Create Session & Tokens
+        const sessionId = crypto.randomUUID();
+
+        const entitlements = await prisma.entitlement.findMany({
+            where: { userId: user.id, status: "active" },
+            select: { planId: true },
+        });
+        const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
+
+        const { accessToken, refreshToken } = await generateTokens(user.id, sessionId, ["openid", "profile", "email"], user.roles, undefined, undefined, entitlementScopes);
+        const refreshTokenHash = await hashPassword(refreshToken);
+
         const session = await prisma.session.create({
             data: {
+                id: sessionId,
                 userId: user.id,
-                refreshTokenHash: "pending",
+                refreshTokenHash,
                 expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
                 deviceInfo: req.headers["user-agent"] || "unknown",
                 ipAddress: req.ip || "unknown",
             },
-        });
-
-        const { accessToken, refreshToken } = await generateTokens(user.id, session.id, ["openid", "profile", "email"]);
-
-        await prisma.session.update({
-            where: { id: session.id },
-            data: { refreshTokenHash: await hashPassword(refreshToken) },
         });
 
         // 5. Send Cookies & Redirect to App
@@ -263,21 +268,26 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
         });
 
         // 4. Create Session
+        const sessionId = crypto.randomUUID();
+
+        const entitlements = await prisma.entitlement.findMany({
+            where: { userId: user.id, status: "active" },
+            select: { planId: true },
+        });
+        const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
+
+        const { accessToken, refreshToken } = await generateTokens(user.id, sessionId, ["openid", "profile", "email"], user.roles, undefined, undefined, entitlementScopes);
+        const refreshTokenHash = await hashPassword(refreshToken);
+
         const session = await prisma.session.create({
             data: {
+                id: sessionId,
                 userId: user.id,
-                refreshTokenHash: "pending",
+                refreshTokenHash,
                 expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
                 deviceInfo: req.headers["user-agent"] || "unknown",
                 ipAddress: req.ip || "unknown",
             },
-        });
-
-        const { accessToken, refreshToken } = await generateTokens(user.id, session.id, ["openid", "profile", "email"]);
-
-        await prisma.session.update({
-            where: { id: session.id },
-            data: { refreshTokenHash: await hashPassword(refreshToken) },
         });
 
         // 5. Send Cookies & Redirect

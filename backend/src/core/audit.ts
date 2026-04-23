@@ -1,4 +1,5 @@
 import prisma from "../db/client.js";
+import logger from "./logger.js";
 import { Prisma } from "@prisma/client";
 
 interface AuditLogPayload {
@@ -23,7 +24,7 @@ export class AuditService {
                 details: payload.details ? JSON.stringify(payload.details) : Prisma.DbNull,
             }
         }).catch((err: unknown) => {
-            console.error("Failed to write to AuditLog:", err);
+            logger.error({ err }, "audit_log_write_failed");
         });
     }
 }
