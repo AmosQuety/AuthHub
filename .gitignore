@@ -12,6 +12,10 @@ node_modules/
 backend/node_modules/
 frontend/frontend/node_modules/
 
+#
+*.txt 
+
+
 # Build outputs
 dist/
 backend/dist/
