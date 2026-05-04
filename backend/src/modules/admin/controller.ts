@@ -264,7 +264,6 @@ export const getTenant = async (req: Request, res: Response, next: NextFunction)
                 smtpHost: true,
                 smtpPort: true,
                 smtpUser: true,
-                webhookUrl: true,
                 createdAt: true,
             },
         });
@@ -278,7 +277,7 @@ export const getTenant = async (req: Request, res: Response, next: NextFunction)
 // PATCH /admin/tenants/:id
 export const updateTenant = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const allowedFields = ["name", "logoUrl", "primaryColor", "customDomain", "requireMfa", "allowPasskeys", "webhookUrl", "emailFrom", "smtpHost", "smtpPort", "smtpUser"];
+        const allowedFields = ["name", "logoUrl", "primaryColor", "customDomain", "requireMfa", "allowPasskeys", "emailFrom", "smtpHost", "smtpPort", "smtpUser"];
         const data: Record<string, any> = {};
         for (const field of allowedFields) {
             if (req.body[field] !== undefined) data[field] = req.body[field];
@@ -456,7 +455,7 @@ export const createRootApiKey = async (req: Request, res: Response, next: NextFu
 
 export const revokeRootApiKey = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const id = req.params.id;
+        const id = String(req.params.id);
     await prisma.rootApiKey.delete({ where: { id } });
 
     AuditService.log({

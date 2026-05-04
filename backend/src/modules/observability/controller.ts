@@ -138,6 +138,7 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
   try {
     const tenantId = req.query.tenantId as string | undefined;
     const whereTenant = tenantId ? { tenantId } : {};
+    const auditTenantWhere: Prisma.AuditLogWhereInput = tenantId ? { user: { tenantId } } : {};
 
     // Use a safer execution for the whole block to identify the culprit
     let results;
@@ -154,7 +155,7 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
           where: {
             action: "LOGIN_SUCCESS",
             createdAt: { gte: startOfDay(new Date()) },
-            ...whereTenant
+            ...auditTenantWhere
           }
         }),
         prisma.oAuthClient.count({ where: whereTenant }),
@@ -184,7 +185,7 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
           where: { enabled: true, user: whereTenant } 
         }).catch(() => 0),
         prisma.auditLog.findMany({
-          where: whereTenant,
+          where: auditTenantWhere,
           take: 5,
           orderBy: { createdAt: "desc" },
           include: { user: { select: { email: true } } }

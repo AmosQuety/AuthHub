@@ -53,11 +53,20 @@ export const listWebhookEndpoints = async (req: Request, res: Response, next: Ne
 
 export const deleteWebhookEndpoint = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { id } = req.params;
+        const id = String(req.params.id);
         const tenantId = req.user?.tenantId || null;
 
-        await prisma.webhookEndpoint.delete({
+        const endpoint = await prisma.webhookEndpoint.findFirst({
             where: { id, tenantId }
+        });
+
+        if (!endpoint) {
+            res.status(404).json({ error: "Webhook endpoint not found" });
+            return;
+        }
+
+        await prisma.webhookEndpoint.delete({
+            where: { id: endpoint.id }
         });
 
         res.status(204).send();
@@ -70,10 +79,11 @@ export const getWebhookDeliveries = async (req: Request, res: Response, next: Ne
     try {
         const { id } = req.params; // Endpoint ID
         const tenantId = req.user?.tenantId || null;
+        const endpointId = String(id);
 
         const deliveries = await prisma.webhookDelivery.findMany({
             where: { 
-                webhookEndpointId: id,
+                webhookEndpointId: endpointId,
                 endpoint: { tenantId }
             },
             orderBy: { createdAt: "desc" },
