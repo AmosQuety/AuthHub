@@ -60,7 +60,7 @@ export default function AppShell() {
               </div>
               <div className="text-left">
                 <p className="text-xs font-bold text-white">{tenant?.name || "Global Console"}</p>
-                <p className="text-[10px] text-white/40">{tenant?.clientId || "authhub.io"}</p>
+                <p className="text-[10px] text-white/40">{tenant?.id || "authhub.io"}</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-white/60 transition-colors" />
