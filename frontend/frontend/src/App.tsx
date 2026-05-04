@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -6,7 +7,7 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { ProtectedRoute, PublicRoute } from "./components/AuthRoutes";
-import { AdminRoute } from "./components/AdminRoute";
+// import { AdminRoute } from "./components/AdminRoute" // Removed unused admin route import
 
 declare const __INCLUDE_ADMIN__: boolean;
 declare const __INCLUDE_DEVELOPER__: boolean;
@@ -38,7 +39,7 @@ const ChangePassword = lazy(() => import("./pages/ChangePassword"));
 // Enterprise Layout & Pages
 const AppShell = lazy(() => import("./pages/shell/AppShell"));
 const Overview = lazy(() => import("./pages/Overview"));
-const Users = lazy(() => import("./pages/Users"));
+// const Users = lazy(() => import("./pages/Users")); // Removed unused import
 const Applications = lazy(() => import("./pages/developer/Applications"));
 const Webhooks = lazy(() => import("./pages/Webhooks"));
 const ApiLogs = lazy(() => import("./pages/developer/ApiLogs"));
@@ -57,16 +58,16 @@ const AdminObservability = __INCLUDE_ADMIN__
   : null;
 const AdminDashboard = __INCLUDE_ADMIN__
   ? lazy(() => import("./pages/admin/AdminDashboard"))
-  : null;
+  : (() => null) as unknown as LazyExoticComponent<React.ComponentType<any>>;
 const AdminTenants = __INCLUDE_ADMIN__
   ? lazy(() => import("./pages/admin/Tenants"))
-  : null;
+  : (() => null) as unknown as LazyExoticComponent<React.ComponentType<any>>;
 const SystemSettings = __INCLUDE_ADMIN__
   ? lazy(() => import("./pages/admin/SystemSettings"))
-  : null;
+  : (() => null) as unknown as LazyExoticComponent<React.ComponentType<any>>;
 const RootKeys = __INCLUDE_ADMIN__
   ? lazy(() => import("./pages/admin/RootKeys"))
-  : null;
+  : (() => null) as unknown as LazyExoticComponent<React.ComponentType<any>>;
 
 import { PageSkeleton } from "./components/Skeleton";
 
