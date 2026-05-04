@@ -24,6 +24,7 @@ function lazyWithPreload<T extends ComponentType<any>>(
   return Component;
 }
 
+const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazyWithPreload(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const CompleteProfile = lazy(() => import("./pages/CompleteProfile"));
@@ -93,6 +94,9 @@ export default function App() {
               <ThemeToggle />
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
+                  {/* Root: Landing for public, Dashboard for authenticated */}
+                  <Route path="/" element={<Landing />} />
+
                   {/* Public Authentication Routes */}
                   <Route element={<PublicRoute />}>
                     <Route path="/login" element={<Login onIntentPrefetchDashboard={prefetchDashboard} />} />
@@ -117,7 +121,7 @@ export default function App() {
                   {/* Enterprise Authenticated Shell */}
                   <Route element={<ProtectedRoute />}>
                     <Route element={<AppShell />}>
-                      <Route path="/" element={<Overview />} />
+                      <Route path="/dashboard" element={<Overview />} />
                       {/* Removed /users from ordinary system per user request */}
                       
                       <Route path="/developer/applications" element={<Applications />} />
