@@ -3,7 +3,15 @@
 // Downstream applications send a `?tenant=<id>` query param to AuthHub's login URL
 // to trigger white-labeling for their brand.
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { api } from "../lib/api";
 
 interface TenantBranding {
@@ -15,19 +23,17 @@ interface TenantBranding {
   allowPasskeys: boolean;
 }
 
-interface TenantContextValue {
+interface TenantState {
   tenant: TenantBranding | null;
   isLoading: boolean;
 }
 
-const TenantContext = createContext<TenantContextValue>({
-  tenant: null,
-  isLoading: false,
-});
-
-export function useTenant() {
-  return useContext(TenantContext);
+interface TenantActions {
+  refreshTenant: () => Promise<void>;
 }
+
+const TenantStateContext = createContext<TenantState | undefined>(undefined);
+const TenantActionsContext = createContext<TenantActions | undefined>(undefined);
 
 // Convert a hex color like #7c3aed to hsl values for CSS variable injection
 function hexToHsl(hex: string): string | null {
@@ -83,43 +89,90 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenant, setTenant] = useState<TenantBranding | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
+  const refreshTenant = useCallback(async () => {
     const params = new URLSearchParams(window.location.search);
     const tenantId = params.get("tenant");
     const clientId = params.get("client_id");
 
     if (!tenantId && !clientId) {
+      setTenant(null);
       resetTenantTheme();
       return;
     }
 
     setIsLoading(true);
-
-    const endpoint = clientId 
+    const endpoint = clientId
       ? `/tenant/config?client_id=${encodeURIComponent(clientId)}`
       : `/tenant/${encodeURIComponent(tenantId!)}/config`;
 
-    api.get(endpoint)
-      .then(data => {
-        if (data.tenant) {
-          setTenant(data.tenant);
-          applyTenantTheme(data.tenant);
-        }
-      })
-      .catch(() => {
-        // Unknown tenant/client — silently use default AuthHub branding
+    try {
+      const data = await api.get(endpoint);
+      if (data.tenant) {
+        setTenant(data.tenant);
+        applyTenantTheme(data.tenant);
+      } else {
+        setTenant(null);
         resetTenantTheme();
-      })
-      .finally(() => setIsLoading(false));
+      }
+    } catch {
+      setTenant(null);
+      resetTenantTheme();
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshTenant();
 
     return () => {
       resetTenantTheme();
     };
-  }, []);
+  }, [refreshTenant]);
+
+  const stateValue = useMemo<TenantState>(
+    () => ({
+      tenant,
+      isLoading,
+    }),
+    [tenant, isLoading],
+  );
+
+  const actionsValue = useMemo<TenantActions>(
+    () => ({
+      refreshTenant,
+    }),
+    [refreshTenant],
+  );
 
   return (
-    <TenantContext.Provider value={{ tenant, isLoading }}>
-      {children}
-    </TenantContext.Provider>
+    <TenantStateContext.Provider value={stateValue}>
+      <TenantActionsContext.Provider value={actionsValue}>{children}</TenantActionsContext.Provider>
+    </TenantStateContext.Provider>
   );
+}
+
+export function useTenantState() {
+  const context = useContext(TenantStateContext);
+  if (context === undefined) {
+    throw new Error("useTenantState must be used within a TenantProvider");
+  }
+  return context;
+}
+
+export function useTenantActions() {
+  const context = useContext(TenantActionsContext);
+  if (context === undefined) {
+    throw new Error("useTenantActions must be used within a TenantProvider");
+  }
+  return context;
+}
+
+export function useTenant() {
+  const state = useTenantState();
+  const actions = useTenantActions();
+  return {
+    ...state,
+    ...actions,
+  };
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../../lib/api";
 import { Search, ShieldCheck, Trash2, CheckCircle2, XCircle, Users, UserCog, Loader2 } from "lucide-react";
 
@@ -18,19 +18,28 @@ export default function AdminUsers() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const loadUsers = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(page), limit: "20" });
-      if (search) params.append("search", search);
-      const data = await api.get(`/auth/admin/users?${params}`);
-      setUsers(data.users || []);
-      setTotal(data.total || 0);
-    } catch { console.error("Failed to load users"); }
-    finally { setIsLoading(false); }
-  }, [page, search]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const loadUsers = async () => {
+        setIsLoading(true);
+        try {
+          const params = new URLSearchParams({ page: String(page), limit: "20" });
+          if (search) params.append("search", search);
+          const data = await api.get(`/auth/admin/users?${params}`);
+          setUsers(data.users || []);
+          setTotal(data.total || 0);
+        } catch {
+          console.error("Failed to load users");
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
-  useEffect(() => { const t = setTimeout(loadUsers, 300); return () => clearTimeout(t); }, [loadUsers]);
+      void loadUsers();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [page, search]);
 
   const handleDelete = async (userId: string, email: string) => {
     if (!confirm(`Permanently delete "${email}"? All sessions will be revoked.`)) return;

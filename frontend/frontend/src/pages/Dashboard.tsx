@@ -1,21 +1,36 @@
-import { useState, useEffect } from "react";
+import { use, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
 import { useToast } from "../contexts/ToastContext";
 import {
-  LogOut, Laptop, Smartphone, Trash2, Loader2,
+  LogOut, Laptop, Smartphone, Trash2,
   KeyRound, ShieldCheck, Fingerprint, ShieldAlert,
   Users, Settings2, Globe, Webhook, TerminalSquare,
-  Clock, MapPin, Sparkles, CreditCard
+  Clock, MapPin, Sparkles, CreditCard,
+  Github, Mail
 } from "lucide-react";
 import { OnboardingTour } from "../components/OnboardingTour";
+import { ConfirmationModal } from "../components/ui/ConfirmationModal";
+import { ReAuthModal } from "../components/ui/ReAuthModal";
 
 interface Session {
   id: string;
   ipAddress: string | null;
   deviceInfo: { browser?: string; os?: string; isMobile?: boolean };
   expiresAt: string;
+}
+
+let sessionsResource: Promise<Session[]> | null = null;
+
+function getSessionsResource(forceRefresh = false) {
+  if (!sessionsResource || forceRefresh) {
+    sessionsResource = api
+      .get("/auth/sessions")
+      .then((data) => data.sessions || [])
+      .catch(() => []);
+  }
+  return sessionsResource;
 }
 
 function NavCard({
@@ -53,25 +68,134 @@ function NavCard({
 }
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+  const { user, logout, refreshProfile } = useAuth();
+  const initialSessions = use(getSessionsResource());
+  const [sessions, setSessions] = useState<Session[]>(initialSessions);
   const navigate = useNavigate();
-  const { success, error: showError } = useToast();
+  const { success: toastSuccess, error: toastError } = useToast();
 
-  useEffect(() => {
-    api.get("/auth/sessions")
-      .then(d => setSessions(d.sessions || []))
-      .catch(() => {})
-      .finally(() => setIsLoadingSessions(false));
-  }, []);
+  const handleLink = (providerId: string) => {
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+    window.location.href = `${baseUrl}/auth/${providerId}?mode=link&user_id=${user?.id}`;
+  };
+
+  const handleUnlink = async (providerLinkId: string) => {
+    const performUnlink = async () => {
+      try {
+        await api.delete(`/auth/providers/${providerLinkId}`);
+        toastSuccess("Provider unlinked successfully.");
+        await refreshProfile();
+      } catch (err: any) {
+        toastError(err.message || "Failed to unlink provider.");
+      }
+    };
+
+    if (user?.hasPassword) {
+      setReAuthModalConfig({
+        isOpen: true,
+        title: "Confirm Identity",
+        message: "Please enter your password to unlink this social account.",
+        onConfirm: () => {
+          setReAuthModalConfig(prev => ({ ...prev, isOpen: false }));
+          performUnlink();
+        }
+      });
+    } else {
+      setModalConfig({
+        isOpen: true,
+        title: "Unlink Provider?",
+        message: "Are you sure you want to remove this login method?",
+        onConfirm: () => {
+          setModalConfig(prev => ({ ...prev, isOpen: false }));
+          performUnlink();
+        }
+      });
+    }
+  };
+
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
+
+  const [reAuthModalConfig, setReAuthModalConfig] = useState<{
+    isOpen: boolean;
+    onConfirm: () => void;
+    title?: string;
+    message?: string;
+  }>({
+    isOpen: false,
+    onConfirm: () => {},
+  });
 
   const handleRevokeSession = async (id: string) => {
     try {
       await api.delete(`/auth/sessions/${id}`);
-      setSessions(s => s.filter(x => x.id !== id));
-      success("Session revoked");
-    } catch { showError("Failed to revoke session"); }
+      
+      const currentSid = (user as any)?.sid;
+      if (currentSid && id === currentSid) {
+        toastSuccess("Current session revoked. Logging out...");
+        setTimeout(logout, 1500);
+        return;
+      }
+
+      setSessions(prev => prev.filter(x => x.id !== id));
+      sessionsResource = null;
+      toastSuccess("Session revoked");
+    } catch (err: any) { 
+      toastError(err.message || "Failed to revoke session"); 
+    }
+  };
+
+  const handleRevokeAllOther = async () => {
+    const currentSid = (user as any)?.sid;
+    
+    if (!currentSid) {
+      toastError("Security update required. Please log out and back in once to enable this feature.");
+      return;
+    }
+
+    const performRevoke = async () => {
+      try {
+        await api.delete("/auth/sessions/others");
+        setSessions(prev => prev.filter(x => x.id === currentSid));
+        sessionsResource = null;
+        const fresh = await api.get("/auth/sessions");
+        setSessions(fresh.sessions || []);
+        toastSuccess("All other sessions revoked");
+      } catch (err: any) { 
+        toastError(err.message || "Failed to revoke other sessions"); 
+      }
+    };
+
+    if (user?.hasPassword) {
+      setReAuthModalConfig({
+        isOpen: true,
+        title: "Elevated Action",
+        message: "Confirm your password to revoke all other active sessions.",
+        onConfirm: () => {
+          setReAuthModalConfig(prev => ({ ...prev, isOpen: false }));
+          performRevoke();
+        }
+      });
+    } else {
+      setModalConfig({
+        isOpen: true,
+        title: "Revoke Other Sessions",
+        message: "Are you sure you want to revoke all other active sessions? You will remain logged in on this device.",
+        onConfirm: () => {
+          setModalConfig(prev => ({ ...prev, isOpen: false }));
+          performRevoke();
+        }
+      });
+    }
   };
 
   const isAdmin = Array.isArray((user as any)?.roles) && (user as any).roles.includes("ADMIN");
@@ -106,34 +230,114 @@ export default function Dashboard() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Left column — navigation cards */}
           <div className="md:col-span-1 space-y-5 animate-fade-up stagger-1">
-            {/* Account & Security section */}
+            {/* Developer Section - PROMOTED TO TOP */}
+            <div className="glass-card p-5 border border-cyan-500/10 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-cyan-500/10 transition-colors" />
+              <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-bold mb-4 flex items-center gap-2 relative z-10">
+                <TerminalSquare className="w-3 h-3" /> Developer Tools
+              </p>
+              <div className="space-y-2 relative z-10">
+                <NavCard 
+                  id="tour-developer-portal" 
+                  icon={Globe} 
+                  label="Developer Portal" 
+                  sub={`${user?.clientCount || 0} Active Apps`} 
+                  action="Open" 
+                  onClick={() => navigate("/developer")} 
+                  accent={true}
+                />
+                <NavCard 
+                  icon={Webhook} 
+                  label="Webhooks" 
+                  sub="Status: Live" 
+                  action="Config" 
+                  onClick={() => navigate("/webhooks")} 
+                />
+              </div>
+            </div>
+
             <div className="glass-card p-5">
               <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-4 flex items-center gap-2">
                 <ShieldCheck className="w-3 h-3 text-violet-400" /> Account & Security
               </p>
               <div className="space-y-2">
-                <NavCard icon={CreditCard} label="Billing" sub="Manage subscription" action="View" onClick={() => navigate("/billing")} />
-                <NavCard icon={KeyRound} label="Password" sub="Manage credentials" action="Change" onClick={() => {}} />
-                <NavCard id="tour-mfa-setup" icon={ShieldCheck} label="Two-Factor Auth" sub="TOTP authenticator" action="Setup" onClick={() => navigate("/mfa-setup")} />
+                {/* <NavCard icon={CreditCard} label="Billing" sub="Manage subscription" action="View" onClick={() => navigate("/billing")} /> */}
+                <NavCard 
+                  icon={KeyRound} 
+                  label={(user as any)?.hasPassword ? "Password" : "Set Password"} 
+                  sub={(user as any)?.hasPassword ? "Manage credentials" : "No password set"} 
+                  action={(user as any)?.hasPassword ? "Change" : "Set"} 
+                  onClick={() => navigate("/change-password")} 
+                />
+                <NavCard 
+                  id="tour-mfa-setup" 
+                  icon={ShieldCheck} 
+                  label="Two-Factor Auth" 
+                  sub={user?.mfaEnabled ? "Enabled · Secure" : "TOTP authenticator"} 
+                  action={user?.mfaEnabled ? "Manage" : "Setup"} 
+                  onClick={() => navigate("/mfa-setup")} 
+                  accent={!user?.mfaEnabled}
+                />
                 <NavCard icon={Fingerprint} label="Passkeys" sub="Biometric login" action="Add" onClick={() => navigate("/passkey-setup")} />
                 <NavCard icon={ShieldAlert} label="Security Audit" sub="Login history" action="View" onClick={() => navigate("/security-audit")} />
               </div>
             </div>
 
-            {/* Developer section */}
-            <div className="glass-card p-5">
-              <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-4 flex items-center gap-2">
-                <TerminalSquare className="w-3 h-3 text-cyan-400" /> Developer
-              </p>
-              <div className="space-y-2">
-                <NavCard id="tour-developer-portal" icon={Globe} label="Developer Portal" sub="OAuth applications" action="Open" onClick={() => navigate("/developer")} />
-                <NavCard icon={Webhook} label="Webhooks" sub="Event streams" action="Config" onClick={() => navigate("/webhooks")} />
+            {/* --- NEW: Linked Identities Section --- */}
+            <div className="glass-card p-6 animate-fade-up" style={{ animationDelay: '0.15s' }}>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                  <Fingerprint className="w-5 h-5 text-violet-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white" style={{ fontFamily: "'Outfit', sans-serif" }}>Linked Identities</h3>
+                  <p className="text-white/40 text-xs mt-0.5">Manage your connected social accounts</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  { id: 'google', name: 'Google', icon: Mail },
+                  { id: 'github', name: 'GitHub', icon: Github },
+                ].map((provider) => {
+                  const linked = user?.providers?.find(p => p.name === provider.id);
+                  return (
+                    <div key={provider.id} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-all group">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2.5 rounded-xl ${linked ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-white/40 border border-white/10'}`}>
+                          <provider.icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">{provider.name}</p>
+                          <p className={`text-[10px] font-medium uppercase tracking-wider ${linked ? 'text-emerald-400' : 'text-white/20'}`}>
+                            {linked ? 'Connected' : 'Not Linked'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {linked ? (
+                        <button 
+                          onClick={() => handleUnlink(linked.id)}
+                          className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/20 transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          Unlink
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => handleLink(provider.id)}
+                          className="px-4 py-2 rounded-xl bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 text-xs font-bold border border-violet-500/20 transition-all"
+                        >
+                          Link Account
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
+            {/* --- End Linked Identities --- */}
 
-            {/* Admin section — only visible to admins */}
             {isAdmin && (
               <div className="glass-card p-5">
                 <p className="text-[10px] uppercase tracking-widest text-violet-400/60 font-bold mb-4 flex items-center gap-2">
@@ -148,7 +352,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Right column — active sessions */}
           <div className="md:col-span-2 animate-fade-up stagger-2">
             <div id="tour-active-sessions" className="glass-card h-full p-5">
               <div className="flex items-center justify-between mb-5">
@@ -156,16 +359,20 @@ export default function Dashboard() {
                   <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold mb-0.5">Active Sessions</p>
                   <h2 className="text-white font-semibold">Devices & Locations</h2>
                 </div>
-                <div className="badge badge-cyan">{sessions.length} active</div>
+                <div className="flex items-center gap-3">
+                  <div className="badge badge-cyan">{sessions.length} active</div>
+                  {sessions.length > 1 && (
+                    <button 
+                      onClick={handleRevokeAllOther}
+                      className="text-[10px] font-bold text-rose-400/60 hover:text-rose-400 uppercase tracking-wider transition-colors"
+                    >
+                      Revoke Others
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {isLoadingSessions ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className={`skeleton h-[72px] rounded-xl stagger-${i}`} />
-                  ))}
-                </div>
-              ) : sessions.length === 0 ? (
+              {sessions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48 text-center">
                   <Laptop className="w-10 h-10 text-white/10 mb-3" />
                   <p className="text-white/25 text-sm">No active sessions found.</p>
@@ -184,8 +391,11 @@ export default function Dashboard() {
                         }
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-white/80 truncate">
+                        <div className="text-sm font-medium text-white/80 truncate flex items-center gap-2">
                           {session.deviceInfo?.os || "Unknown OS"} · {session.deviceInfo?.browser || "Unknown Browser"}
+                          {session.id === (user as any)?.sid && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-400 font-bold uppercase tracking-tighter">Current</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-[11px] text-white/25">
                           <span className="flex items-center gap-1">
@@ -213,6 +423,22 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={modalConfig.isOpen}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onConfirm={modalConfig.onConfirm}
+        onCancel={() => setModalConfig(prev => ({ ...prev, isOpen: false }))}
+      />
+
+      <ReAuthModal
+        isOpen={reAuthModalConfig.isOpen}
+        title={reAuthModalConfig.title}
+        message={reAuthModalConfig.message}
+        onConfirm={reAuthModalConfig.onConfirm}
+        onCancel={() => setReAuthModalConfig(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

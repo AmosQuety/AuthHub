@@ -1,56 +1,93 @@
-import { useState, useEffect } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { useTenant } from "../contexts/TenantContext";
+import { useAuthActions } from "../contexts/AuthContext";
+import { useTenantState } from "../contexts/TenantContext";
 import { useToast } from "../contexts/ToastContext";
 import { api, ApiError } from "../lib/api";
 import { SocialLoginButtons } from "../components/SocialLoginButtons";
 import { Mail, Lock, Loader2, ShieldCheck } from "lucide-react";
 
-export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const { login } = useAuth();
+interface LoginProps {
+  onIntentPrefetchDashboard?: () => void;
+}
+
+interface LoginActionState {
+  error: string;
+}
+
+export default function Login({ onIntentPrefetchDashboard }: LoginProps) {
+  const [oauthError, setOauthError] = useState("");
+  const submitButtonRef = useRef<HTMLButtonElement | null>(null);
+  const { login } = useAuthActions();
   const navigate = useNavigate();
   const location = useLocation();
-  const { tenant } = useTenant();
+  const { tenant } = useTenantState();
   const { success, error: toastError } = useToast();
 
   const from = location.state?.from?.pathname + location.state?.from?.search || "/";
+
+  const [actionState, submitLogin, isPending] = useActionState<LoginActionState, FormData>(
+    async (_previousState, formData) => {
+      const email = String(formData.get("email") ?? "").trim();
+      const password = String(formData.get("password") ?? "");
+
+      if (!email || !password) {
+        return { error: "Email and password are required" };
+      }
+
+      try {
+        const data = await api.post("/auth/login", { email, password });
+        if (data.mfaRequired) {
+          navigate("/mfa-challenge", { state: { mfaToken: data.mfaToken } });
+          return { error: "" };
+        }
+        login(data.accessToken, data.user);
+        success("Logged in successfully");
+        navigate(from, { replace: true });
+        return { error: "" };
+      } catch (err: any) {
+        const msg = err instanceof ApiError ? err.message : "An unexpected error occurred";
+        toastError(msg);
+        return { error: msg };
+      }
+    },
+    { error: "" },
+  );
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const errorParam = params.get("error");
     if (errorParam) {
-      if (errorParam === "account_not_found") setError("No account found with this social provider. Please register first.");
-      else if (errorParam === "oauth_failed") setError("Social login failed. Please try again.");
-      else setError("An error occurred during authentication.");
+      if (errorParam === "account_not_found") setOauthError("No account found with this social provider. Please register first.");
+      else if (errorParam === "oauth_failed") setOauthError("Social login failed. Please try again.");
+      else setOauthError("An error occurred during authentication.");
+    } else {
+      setOauthError("");
     }
   }, [location]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-    try {
-      const data = await api.post("/auth/login", { email, password });
-      if (data.mfaRequired) {
-        navigate("/mfa-challenge", { state: { mfaToken: data.mfaToken } });
-        return;
-      }
-      login(data.accessToken, data.user);
-      success("Logged in successfully");
-      navigate(from, { replace: true });
-    } catch (err: any) {
-      const msg = err instanceof ApiError ? err.message : "An unexpected error occurred";
-      setError(msg);
-      toastError(msg);
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (!onIntentPrefetchDashboard || !submitButtonRef.current || !("IntersectionObserver" in window)) {
+      return;
     }
-  };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          onIntentPrefetchDashboard();
+          observer.disconnect();
+        }
+      },
+      {
+        root: null,
+        rootMargin: "120px",
+        threshold: 0.01,
+      },
+    );
+
+    observer.observe(submitButtonRef.current);
+    return () => observer.disconnect();
+  }, [onIntentPrefetchDashboard]);
 
   const handleGoogleLogin = () => {
     window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"}/auth/google?mode=login`;
@@ -58,6 +95,8 @@ export default function Login() {
   const handleGithubLogin = () => {
     window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"}/auth/github?mode=login`;
   };
+
+  const errorMessage = oauthError || actionState.error;
 
   return (
     <div className="w-full min-h-screen flex items-center justify-center p-4 relative">
@@ -89,27 +128,26 @@ export default function Login() {
           </div>
 
           {/* Error */}
-          {error && (
+          {errorMessage && (
             <div className="p-3 mb-6 text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" />
-              {error}
+              {errorMessage}
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form action={submitLogin} className="space-y-4">
             <div>
               <label className="input-label" htmlFor="email">Email Address</label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none" />
                 <input
                   id="email"
+                  name="email"
                   type="email"
                   required
                   className="input-field pl-10"
                   placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
@@ -125,18 +163,24 @@ export default function Login() {
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none" />
                 <input
                   id="password"
+                  name="password"
                   type="password"
                   required
                   className="input-field pl-10"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
             </div>
 
-            <button type="submit" disabled={isLoading} className="btn-primary w-full mt-2">
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign in"}
+            <button
+              ref={submitButtonRef}
+              type="submit"
+              disabled={isPending}
+              className="btn-primary w-full mt-2"
+              onMouseEnter={onIntentPrefetchDashboard}
+              onFocus={onIntentPrefetchDashboard}
+            >
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign in"}
             </button>
           </form>
 

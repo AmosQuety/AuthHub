@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { getStats, getFunnel, getHeatmap, getRiskTrends } from "./controller.js";
+import { getStats, getFunnel, getHeatmap, getRiskTrends, getDashboardSummary } from "./controller.js";
 
 const router = Router();
 
 // /api/v1/admin/observability/*
+router.get("/summary", getDashboardSummary);
 router.get("/stats", getStats);
 router.get("/funnel", getFunnel);
 router.get("/heatmap", getHeatmap);

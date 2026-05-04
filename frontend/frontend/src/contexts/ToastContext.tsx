@@ -49,23 +49,23 @@ const toastStyles = {
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const addToast = useCallback((message: string, type: ToastType) => {
+  const addToast = (message: string, type: ToastType) => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
 
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4500);
-  }, []);
+  };
 
-  const success = useCallback((message: string) => addToast(message, 'success'), [addToast]);
-  const error = useCallback((message: string) => addToast(message, 'error'), [addToast]);
-  const info = useCallback((message: string) => addToast(message, 'info'), [addToast]);
-  const warning = useCallback((message: string) => addToast(message, 'warning'), [addToast]);
+  const success = useCallback((message: string) => addToast(message, 'success'), []);
+  const error = useCallback((message: string) => addToast(message, 'error'), []);
+  const info = useCallback((message: string) => addToast(message, 'info'), []);
+  const warning = useCallback((message: string) => addToast(message, 'warning'), []);
 
-  const removeToast = useCallback((id: string) => {
+  const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+  };
 
   return (
     <ToastContext.Provider value={{ addToast, success, error, info, warning }}>

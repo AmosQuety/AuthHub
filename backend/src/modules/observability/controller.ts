@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
+import { Prisma } from "@prisma/client";
 import prisma from "../../db/client.js";
 import geoip from "geoip-lite";
-import { subDays, startOfDay, endOfDay } from "date-fns"; // Helps with date bucket grouping
+import { subDays, startOfDay, endOfDay } from "date-fns";
 
 export const getStats = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -108,41 +109,123 @@ export const getRiskTrends = async (req: Request, res: Response, next: NextFunct
     const daysToLookBack = 14;
     const since = subDays(startOfDay(new Date()), daysToLookBack);
 
-    // Fetch daily aggregates for SUCCESS vs BLOCKED.
-    // In raw SQL we'd group by DATE_TRUNC, in Prisma we pull minimal info and bucket
-    const logs = await prisma.auditLog.findMany({
-      where: {
-        createdAt: { gte: since },
-        action: { in: ["LOGIN_ATTEMPT", "LOGIN_SUCCESS", "LOGIN_FAILED", "MFA_FAILED"] },
-      },
-      select: {
-        createdAt: true,
-        status: true,
-      }
+    // Fetch daily aggregates using raw SQL for performance
+    const trends: any[] = await prisma.$queryRaw`
+      SELECT 
+        DATE_TRUNC('day', "created_at")::text as date,
+        COUNT(*) FILTER (WHERE status = 'SUCCESS')::int as success,
+        COUNT(*) FILTER (WHERE status = 'FAILURE')::int as failed,
+        COUNT(*) FILTER (WHERE status = 'BLOCKED')::int as blocked
+      FROM audit_logs
+      WHERE "created_at" >= ${since}
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `;
+
+    // Ensure we return the 'date' in YYYY-MM-DD format as the frontend expects
+    const formattedTrends = trends.map(t => ({
+      ...t,
+      date: t.date.split(" ")[0] // Handle PostgreSQL timestamp string
+    }));
+
+    res.json(formattedTrends);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getDashboardSummary = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const tenantId = req.query.tenantId as string | undefined;
+    const whereTenant = tenantId ? { tenantId } : {};
+
+    // Use a safer execution for the whole block to identify the culprit
+    let results;
+    try {
+      results = await Promise.all([
+        prisma.user.count({ where: whereTenant }),
+        prisma.session.count({ 
+          where: { 
+            expiresAt: { gt: new Date() },
+            user: whereTenant
+          } 
+        }),
+        prisma.auditLog.count({
+          where: {
+            action: "LOGIN_SUCCESS",
+            createdAt: { gte: startOfDay(new Date()) },
+            ...whereTenant
+          }
+        }),
+        prisma.oAuthClient.count({ where: whereTenant }),
+        prisma.user.findMany({
+          where: whereTenant,
+          select: { id: true, email: true, createdAt: true, emailVerified: true, roles: true },
+          orderBy: { createdAt: "desc" },
+          take: 5
+        }),
+        prisma.$queryRaw<any[]>`
+          SELECT 
+            DATE_TRUNC('day', created_at)::text as date,
+            COUNT(*) FILTER (WHERE status = 'SUCCESS')::int as success,
+            COUNT(*) FILTER (WHERE status = 'FAILURE')::int as failed,
+            COUNT(*) FILTER (WHERE status = 'BLOCKED')::int as blocked
+          FROM audit_logs
+          WHERE created_at >= ${subDays(startOfDay(new Date()), 14)}
+          ${tenantId ? Prisma.sql`AND tenant_id = ${tenantId}::uuid` : Prisma.sql``}
+          GROUP BY 1
+          ORDER BY 1 ASC
+        `.catch(err => {
+          console.error("[DASHBOARD ERROR] Risk Trends SQL failed:", err);
+          return [];
+        }),
+        prisma.tenant.count(),
+        prisma.mfaMethod.count({ 
+          where: { enabled: true, user: whereTenant } 
+        }).catch(() => 0),
+        prisma.auditLog.findMany({
+          where: whereTenant,
+          take: 5,
+          orderBy: { createdAt: "desc" },
+          include: { user: { select: { email: true } } }
+        }).catch(() => [])
+      ]);
+    } catch (err) {
+      console.error("[DASHBOARD ERROR] Global Promise.all failed:", err);
+      throw err;
+    }
+
+    const [
+      totalUsers,
+      activeSessions,
+      loginsToday,
+      appCount,
+      recentUsers,
+      riskTrends,
+      tenantCount,
+      mfaCount,
+      recentLogs
+    ] = results;
+
+    const mfaStats = {
+      enabled: mfaCount,
+      disabled: totalUsers - mfaCount
+    };
+
+    res.json({
+      totalUsers,
+      activeSessions,
+      loginsToday,
+      appCount,
+      recentUsers,
+      riskTrends: riskTrends.map(t => ({
+        ...t,
+        date: t.date.split(" ")[0]
+      })),
+      tenantCount,
+      mfaStats,
+      recentLogs
     });
-
-    // Bucket by day
-    const trendMap: Record<string, { date: string, success: number, blocked: number, failed: number }> = {};
-
-    // Initialize 14 days
-    for (let i = 0; i <= daysToLookBack; i++) {
-      const d = startOfDay(subDays(new Date(), i)).toISOString().split("T")[0];
-      trendMap[d] = { date: d, success: 0, blocked: 0, failed: 0 };
-    }
-
-    for (const log of logs) {
-      const day = startOfDay(log.createdAt).toISOString().split("T")[0];
-      if (trendMap[day]) {
-        if (log.status === "SUCCESS") trendMap[day].success += 1;
-        else if (log.status === "BLOCKED") trendMap[day].blocked += 1;
-        else if (log.status === "FAILURE") trendMap[day].failed += 1;
-      }
-    }
-
-    // Sort chronologically (oldest to newest)
-    const trends = Object.values(trendMap).sort((a, b) => a.date.localeCompare(b.date));
-
-    res.json(trends);
   } catch (error) {
     next(error);
   }

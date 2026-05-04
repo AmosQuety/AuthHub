@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { api, ApiError } from "../lib/api";
-import { useAuth } from "../contexts/AuthContext";
+import { api } from "../lib/api";
+import { useAuthState } from "../contexts/AuthContext";
 import { LogIn, Loader2, ShieldCheck, Database, KeySquare, X, Check } from "lucide-react";
 
 export default function Authorize() {
   const [searchParams] = useSearchParams();
-  const { user } = useAuth();
+  const { user } = useAuthState();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   

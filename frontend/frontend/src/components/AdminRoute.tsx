@@ -1,6 +1,6 @@
 // src/components/AdminRoute.tsx
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuthState } from "../contexts/AuthContext";
 import { Loader2, BarChart3, Users, Globe, ArrowLeft, ShieldCheck } from "lucide-react";
 
 const navLinks = [
@@ -10,7 +10,7 @@ const navLinks = [
 ];
 
 export function AdminRoute() {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuthState();
   const location = useLocation();
 
   if (isLoading) {

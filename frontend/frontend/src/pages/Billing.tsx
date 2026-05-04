@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CreditCard, Zap, ShieldCheck, Check, Loader2, Star, Server } from "lucide-react";
+import { CreditCard, Zap, Check, Loader2 } from "lucide-react";
 import { api } from "../lib/api";
 import { useToast } from "../contexts/ToastContext";
 
