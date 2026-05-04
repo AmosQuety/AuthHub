@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-// @ts-ignore
-const { authenticator } = require("otplib");
+const otplib = require("otplib");
+const authenticator = otplib.authenticator || otplib.default?.authenticator || otplib;
+
 import * as qrcode from "qrcode";
 import prisma from "../../db/client.js";
 import { verifyMfaToken, generateTokens, hashPassword } from "../../core/crypto.js";
@@ -16,13 +17,16 @@ export const enrollTotp = async (req: Request, res: Response, next: NextFunction
             return;
         }
 
-        const appName = process.env.BASE_URL?.split("://")[1] || "AuthHub";
+        console.log("MFA: Starting enrollment for user", userId);
         const user = await prisma.user.findUnique({ where: { id: userId } });
-        if (!user) {
-            res.status(404).json({ error: "User not found" });
+        if (!user || !user.email) {
+            console.error("MFA: User or email not found", userId);
+            res.status(404).json({ error: "User or email not found" });
             return;
         }
 
+        const appName = "AuthHub";
+        
         // Check if TOTP is already enabled
         const existingMfa = await prisma.mfaMethod.findFirst({
             where: { userId, type: "totp" }
@@ -34,9 +38,16 @@ export const enrollTotp = async (req: Request, res: Response, next: NextFunction
         }
 
         // Generate Secret
+        console.log("MFA: Using authenticator:", !!authenticator, typeof authenticator);
         const secret = authenticator.generateSecret();
-        const otpauthUrl = authenticator.keyuri(user.email, appName, secret);
+        console.log("MFA: Generated secret", !!secret);
+        
+        // Manually construct OTP Auth URL to avoid keyuri function issues
+        const otpauthUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(user.email)}?secret=${secret}&issuer=${encodeURIComponent(appName)}`;
+        console.log("MFA: Generated OTP Auth URL manually");
+        
         const qrCodeDataUri = await qrcode.toDataURL(otpauthUrl);
+        console.log("MFA: Generated QR Code URI", !!qrCodeDataUri);
 
         // Save un-enabled secret
         if (existingMfa) {
@@ -157,22 +168,26 @@ export const challengeTotp = async (req: Request, res: Response, next: NextFunct
         }
 
         // 4. Success! Issue standard tokens (same logic as end of /login)
+        const sessionId = crypto.randomUUID();
+
+        const entitlements = await prisma.entitlement.findMany({
+            where: { userId, status: "active" },
+            select: { planId: true },
+        });
+        const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
+
+        const { accessToken, refreshToken } = await generateTokens(userId, sessionId, [], undefined, undefined, undefined, entitlementScopes);
+        const refreshTokenHash = await hashPassword(refreshToken);
+
         const session = await prisma.session.create({
             data: {
+                id: sessionId,
                 userId,
-                refreshTokenHash: "pending",
+                refreshTokenHash,
                 expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
                 deviceInfo: req.headers["user-agent"] || "unknown",
                 ipAddress: req.ip || "unknown",
             },
-        });
-
-        const { accessToken, refreshToken } = await generateTokens(userId, session.id);
-
-        const refreshTokenHash = await hashPassword(refreshToken);
-        await prisma.session.update({
-            where: { id: session.id },
-            data: { refreshTokenHash },
         });
 
         res.cookie("refreshToken", refreshToken, {

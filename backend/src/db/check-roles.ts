@@ -1,7 +1,7 @@
 import prisma from "./client.js";
 
 async function checkUser() {
-  const user = await prisma.user.findUnique({
+  const user = await prisma.user.findFirst({
     where: { email: "admin@authhub.local" },
     select: { email: true, roles: true }
   });

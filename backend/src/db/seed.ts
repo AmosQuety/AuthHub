@@ -25,16 +25,22 @@ const seed = async () => {
     const adminPassword = "SuperSecretPassword123!";
     const passwordHash = await hashPassword(adminPassword);
 
-    const adminUser = await prisma.user.upsert({
-      where: { email: adminEmail },
-      update: {},
-      create: {
-        email: adminEmail,
-        passwordHash,
-        emailVerified: true,
-        roles: ["ADMIN", "USER"], // Give admin role
-      },
-    });
+    let adminUser = await prisma.user.findFirst({ where: { email: adminEmail } });
+    if (!adminUser) {
+      adminUser = await prisma.user.create({
+        data: {
+          email: adminEmail,
+          passwordHash,
+          emailVerified: true,
+          roles: ["ADMIN", "USER"], // Give admin role
+        },
+      });
+    } else {
+      adminUser = await prisma.user.update({
+        where: { id: adminUser.id },
+        data: { roles: ["ADMIN", "USER"] }
+      });
+    }
     console.log(`[User] Admin user created: ${adminUser.email} / ${adminPassword}`);
 
     // 3. Create Default OAuth Clients

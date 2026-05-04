@@ -19,8 +19,11 @@ model User {
   id             String         @id @default(uuid()) @db.Uuid
   email          String
   name           String?        @map("name")
+  phoneNumber    String?        @map("phone_number")
+  profilePictureUrl String?     @map("profile_picture_url")
   passwordHash   String?        @map("password_hash") // Optional for social login
   emailVerified  Boolean        @default(false) @map("email_verified")
+  tosAcceptedAt  DateTime?      @map("tos_accepted_at")
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
   roles          Role[]         @default([USER])
@@ -51,6 +54,9 @@ model Session {
   createdAt         DateTime @default(now()) @map("created_at")
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
   @@map("sessions")
 }
 
@@ -84,6 +90,9 @@ model AuditLog {
   // Relations
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([action, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
   @@map("audit_logs")
 }
 
@@ -130,9 +139,9 @@ model Tenant {
   smtpUser      String?       @map("smtp_user")
   smtpPassHash  String?       @map("smtp_pass_hash")          // stored encrypted, never plaintext
   emailFrom     String?       @map("email_from")              // e.g. 'noreply@xemora.com'
-  // White-label webhook
-  webhookUrl    String?       @map("webhook_url")
   webhookSecret String?       @map("webhook_secret")
+  // Webhooks
+  webhooks      WebhookEndpoint[]
   createdAt     DateTime      @default(now()) @map("created_at")
   clients       OAuthClient[]
   users         User[]
@@ -173,3 +182,58 @@ model Entitlement {
   @@map("entitlements")
 }
 
+model WebhookEndpoint {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String?  @map("tenant_id") @db.Uuid
+  url         String
+  secret      String   // Signing secret
+  events      String[] // e.g., ["user.created", "login.success", "session.revoked"]
+  isActive    Boolean  @default(true) @map("is_active")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deliveries  WebhookDelivery[]
+
+  @@map("webhook_endpoints")
+}
+
+model WebhookDelivery {
+  id                String   @id @default(uuid()) @db.Uuid
+  webhookEndpointId String   @db.Uuid @map("webhook_endpoint_id")
+  event             String   // e.g., "user.created"
+  payload           Json
+  statusCode        Int?     @map("status_code")
+  responseBody      String?  @db.Text @map("response_body")
+  durationMs        Int?     @map("duration_ms")
+  errorMessage      String?  @map("error_message")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  endpoint          WebhookEndpoint @relation(fields: [webhookEndpointId], references: [id], onDelete: Cascade)
+
+  @@index([webhookEndpointId, createdAt(sort: Desc)])
+  @@map("webhook_deliveries")
+}
+
+
+model SystemSettings {
+  id              Int      @id @default(1)
+  maintenanceMode Boolean  @default(false) @map("maintenance_mode")
+  globalMfaForce  Boolean  @default(false) @map("global_mfa_force")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model RootApiKey {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String
+  keyPrefix    String    @map("key_prefix") // e.g., 'ah_live_'
+  keyHash      String    @map("key_hash")
+  lastUsedAt   DateTime? @map("last_used_at")
+  expiresAt    DateTime? @map("expires_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@map("root_api_keys")
+}

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import prisma from "../../db/client.js";
+import redis from "../../db/redis.js";
 import argon2 from "argon2";
 import { randomBytes } from "crypto";
 import { AuditService } from "../../core/audit.js";
@@ -159,7 +160,13 @@ export const impersonateUser = async (req: Request, res: Response, next: NextFun
         });
 
         // Rule 2: Token Injection with 'act' claim (No Refresh Token)
-        const tokens = await generateTokens(targetUserId, `impersonation_${adminId}`, [], targetUser.roles, adminId);
+        const entitlements = await prisma.entitlement.findMany({
+            where: { userId: targetUserId, status: "active" },
+            select: { planId: true },
+        });
+        const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
+
+        const tokens = await generateTokens(targetUserId, `impersonation_${adminId}`, [], targetUser.roles, undefined, adminId, entitlementScopes);
 
         // Rule 3: User Transperancy Notifaction
         await sendMail({
@@ -298,4 +305,169 @@ export const deleteTenant = async (req: Request, res: Response, next: NextFuncti
         if (error?.code === "P2025") { res.status(404).json({ error: "Tenant not found" }); return; }
         next(error);
     }
+};
+
+export const globalSearch = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const q = (req.query.q as string || "").trim();
+        if (!q) {
+            res.json({ results: [] });
+            return;
+        }
+
+        const [users, clients, tenants] = await Promise.all([
+            prisma.user.findMany({
+                where: { email: { contains: q, mode: "insensitive" } },
+                select: { id: true, email: true },
+                take: 5
+            }),
+            prisma.oAuthClient.findMany({
+                where: { name: { contains: q, mode: "insensitive" } },
+                select: { clientId: true, name: true },
+                take: 5
+            }),
+            prisma.tenant.findMany({
+                where: { name: { contains: q, mode: "insensitive" } },
+                select: { id: true, name: true },
+                take: 5
+            })
+        ]);
+
+        const results = [
+            ...users.map(u => ({ id: u.id, title: u.email, type: "User", url: `/users?search=${u.email}`, icon: "Users" })),
+            ...clients.map(c => ({ id: c.clientId, title: c.name, type: "Application", url: `/developer/applications`, icon: "Globe" })),
+            ...tenants.map(t => ({ id: t.id, title: t.name, type: "Tenant", url: `/admin/tenants/${t.id}`, icon: "Shield" }))
+        ];
+
+        res.json({ results });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// =============================================================================
+// System Settings
+// =============================================================================
+
+export const getSystemSettings = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const settings = await prisma.systemSettings.upsert({
+      where: { id: 1 },
+      update: {},
+      create: { id: 1, maintenanceMode: false, globalMfaForce: false }
+    });
+    res.json({ settings });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateSystemSettings = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { maintenanceMode, globalMfaForce } = req.body;
+    
+    const settings = await prisma.systemSettings.update({
+      where: { id: 1 },
+      data: {
+        ...(maintenanceMode !== undefined && { maintenanceMode }),
+        ...(globalMfaForce !== undefined && { globalMfaForce }),
+      }
+    });
+
+    // Invalidate cache
+    await redis.del("hub:system:maintenance");
+
+    AuditService.log({
+      userId: req.user?.sub,
+      action: "SYSTEM_SETTINGS_UPDATED",
+      status: "SUCCESS",
+      details: { maintenanceMode, globalMfaForce }
+    });
+
+    res.json({ settings, message: "System settings updated" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// =============================================================================
+// Root API Keys
+// =============================================================================
+
+export const listRootApiKeys = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const keys = await prisma.rootApiKey.findMany({
+      select: {
+        id: true,
+        name: true,
+        keyPrefix: true,
+        lastUsedAt: true,
+        expiresAt: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    res.json({ keys });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createRootApiKey = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { name, expiresAt } = req.body;
+    if (!name) {
+      res.status(400).json({ error: "Name is required for API keys" });
+      return;
+    }
+
+    const rawKey = `ah_live_${randomBytes(24).toString("hex")}`;
+    const keyHash = await argon2.hash(rawKey);
+
+    const apiKey = await prisma.rootApiKey.create({
+      data: {
+        name,
+        keyPrefix: rawKey.slice(0, 10), // e.g., 'ah_live_a1'
+        keyHash,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+      }
+    });
+
+    AuditService.log({
+      userId: req.user?.sub,
+      action: "ROOT_API_KEY_CREATED",
+      status: "SUCCESS",
+      details: { keyId: apiKey.id, name }
+    });
+
+    res.status(201).json({
+      message: "Root API Key created. Store it safely - it will not be shown again.",
+      apiKey: rawKey,
+      metadata: {
+        id: apiKey.id,
+        name: apiKey.name,
+        expiresAt: apiKey.expiresAt
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const revokeRootApiKey = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const id = req.params.id;
+    await prisma.rootApiKey.delete({ where: { id } });
+
+    AuditService.log({
+      userId: req.user?.sub,
+      action: "ROOT_API_KEY_REVOKED",
+      status: "SUCCESS",
+      details: { keyId: id }
+    });
+
+    res.json({ message: "API Key revoked successfully" });
+  } catch (error) {
+    next(error);
+  }
 };

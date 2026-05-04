@@ -20,10 +20,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
     req.user = {
       sub: payload.sub,
+      sid: payload.sid as string,
       roles: (payload.roles as string[]) || []
     };
     next();
   } catch (error) {
+    console.error("[AUTH ERROR] Token verification failed:", error);
     res.status(401).json({ error: "Unauthorized: Invalid token" });
   }
 };

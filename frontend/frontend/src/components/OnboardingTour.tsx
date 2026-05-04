@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Joyride, { STATUS } from "react-joyride";
 import type { CallBackProps, Step, TooltipRenderProps } from "react-joyride";
-import { ShieldAlert, Sparkles, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 
 const steps: Step[] = [
   {
@@ -110,7 +110,6 @@ export function OnboardingTour() {
         },
         overlay: {
           backgroundColor: "rgba(7, 7, 16, 0.75)",
-          backdropFilter: "blur(4px)",
         }
       }}
     />

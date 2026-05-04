@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { describe, it, expect } from "vitest";
 import {
   hashPassword,
@@ -32,20 +33,21 @@ describe("hashPassword / verifyPassword", () => {
 // JWT generation & verification
 // ---------------------------------------------------------------------------
 describe("generateTokens / verifyToken", () => {
-  const userId = "test-user-id";
-  const sessionId = "test-session-id";
+  const userId = "00000000-0000-0000-0000-000000000000";
+  const sessionId = "00000000-0000-0000-0000-000000000001";
 
   it("generates tokens that verify successfully", async () => {
-    const { accessToken, refreshToken } = await generateTokens(userId, sessionId, ["openid"]);
+    const { accessToken, refreshToken } = await generateTokens(userId, sessionId, ["openid"], ["USER"], null, undefined, ["plan:pro"]);
     expect(accessToken).toBeTruthy();
     expect(refreshToken).toBeTruthy();
-
-    const payload = await verifyToken(accessToken);
+    
+    const payload = await verifyToken(accessToken) as any;
     expect(payload.sub).toBe(userId);
+    expect(payload.scopes).toContain("plan:pro");
   });
 
   it("access token contains expected claims", async () => {
-    const { accessToken } = await generateTokens(userId, sessionId, ["openid", "email"], ["ADMIN"]);
+    const { accessToken } = await generateTokens(userId, sessionId, ["openid", "email"], ["ADMIN"], null, undefined, []);
     const payload = await verifyToken(accessToken) as any;
     expect(payload.sub).toBe(userId);
     expect(payload.scopes).toContain("openid");
@@ -55,14 +57,14 @@ describe("generateTokens / verifyToken", () => {
   });
 
   it("refresh token embeds sessionId", async () => {
-    const { refreshToken } = await generateTokens(userId, sessionId);
+    const { refreshToken } = await generateTokens(userId, sessionId, [], ["USER"], null, undefined, []);
     const payload = await verifyToken(refreshToken) as any;
     expect(payload.sid).toBe(sessionId);
     expect(payload.type).toBe("refresh");
   });
 
   it("rejects a tampered token", async () => {
-    const { accessToken } = await generateTokens(userId, sessionId);
+    const { accessToken } = await generateTokens(userId, sessionId, [], ["USER"], null, undefined, []);
     const tampered = accessToken.slice(0, -10) + "TAMPERED!!";
     await expect(verifyToken(tampered)).rejects.toThrow();
   });

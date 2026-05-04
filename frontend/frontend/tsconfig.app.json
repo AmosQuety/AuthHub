@@ -11,7 +11,8 @@
     /* Path Aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@app-root": ["./src/App.tsx"]
     },
 
     /* Bundler mode */

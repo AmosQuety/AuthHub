@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, ApiError } from "../lib/api";
+import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { QrCode, ShieldPlus, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 
@@ -12,13 +13,20 @@ export default function MfaSetup() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { success: toastSuccess, error: toastError } = useToast();
 
   useEffect(() => {
+    if (user?.mfaEnabled) {
+      setSuccess(true);
+      setIsLoading(false);
+      return;
+    }
+
     let mounted = true;
     const startEnrollment = async () => {
       try {
-        const data = await api.post("/auth/mfa/enroll");
+        const data = await api.post("/auth/mfa/totp/enroll");
         if (mounted) { setQrCodeUri(data.qrCodeDataUri); setSecret(data.secret); }
       } catch (err: any) {
         if (mounted) toastError(err.message || "Failed to start MFA enrollment.");
@@ -28,7 +36,7 @@ export default function MfaSetup() {
     };
     startEnrollment();
     return () => { mounted = false; };
-  }, [toastError]);
+  }, [toastError, user?.mfaEnabled]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +44,7 @@ export default function MfaSetup() {
 
     setIsVerifying(true);
     try {
-      await api.post("/auth/mfa/verify", { code });
+      await api.post("/auth/mfa/totp/verify", { code });
       setSuccess(true);
       toastSuccess("MFA Enabled successfully");
       setTimeout(() => navigate("/", { replace: true }), 2000);

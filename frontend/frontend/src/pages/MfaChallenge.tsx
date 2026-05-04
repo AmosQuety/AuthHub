@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuthActions } from "../contexts/AuthContext";
 import { api, ApiError } from "../lib/api";
 import { ShieldAlert, Loader2, Fingerprint } from "lucide-react";
 
@@ -9,7 +9,7 @@ export default function MfaChallenge() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   
-  const { login } = useAuth();
+  const { login } = useAuthActions();
   const navigate = useNavigate();
   const location = useLocation();
 

@@ -46,7 +46,7 @@ async function fetchClient(endpoint: string, { data, skipAuthRefresh, ...customC
 
   // To send the RS256 Access Token, we look it up from localStorage
   const accessToken = localStorage.getItem('accessToken');
-  if (accessToken) {
+  if (accessToken && accessToken !== 'undefined' && accessToken !== 'null' && accessToken.includes('.')) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
 
