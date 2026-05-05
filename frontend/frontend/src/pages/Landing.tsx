@@ -138,12 +138,14 @@ const { accessToken } = await exchangeCode(code);
 // Secured! Your user is authenticated.
 `}</code>
             </pre>
+            <div className='py-5'>
             <a
               href={docsPath}
-              className="px-8 py-3 rounded-[0.75rem] border border-white/20 hover:border-[#a855f7] text-white font-semibold transition"
+              className="px-8 py-3 rounded-[0.75rem] bg-gradient-to-r from-[#a855f7] to-[#7c3aed] hover:from-[#9333ea] hover:to-[#6d28d9] text-white font-semibold transition transform hover:scale-105"
             >
               More ...
             </a>
+            </div>
           </div>
         </div>
       </header>
