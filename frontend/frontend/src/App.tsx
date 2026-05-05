@@ -31,6 +31,7 @@ const CompleteProfile = lazy(() => import("./pages/CompleteProfile"));
 const MfaChallenge = lazy(() => import("./pages/MfaChallenge"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const ApiDocsRedirect = lazy(() => import("./pages/ApiDocsRedirect"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
@@ -114,8 +115,11 @@ export default function App() {
                   <Route path="/auth/complete-profile" element={<CompleteProfile />} />
 
                   {/* Public Legal Pages */}
+                  <Route path="/docs" element={<ApiDocsRedirect />} />
                   <Route path="/terms" element={<TermsOfService />} />
+                  <Route path="/terms-of-service" element={<TermsOfService />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
 
                   {/* Enterprise Authenticated Shell */}
