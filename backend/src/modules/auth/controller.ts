@@ -25,7 +25,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       return;
     }
 
-    // Resolve tenant from client_id if provided
+    // Resolve tenant from client_id if provided.
     let tenantId: string | null = null;
     if (client_id) {
       const tenant = await prisma.tenant.findUnique({ where: { clientId: client_id }, select: { id: true } });
@@ -48,24 +48,12 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 
     const passwordHash = await hashPassword(password);
 
-    // AUTO-TENANT: If no tenantId is resolved (Direct Platform Signup), create a new one
-    if (!tenantId) {
-      const tenantName = `${name || email.split('@')[0]}'s Workspace`;
-      const newTenant = await prisma.tenant.create({
-        data: {
-          name: tenantName,
-          clientId: `${slugify(tenantName)}_${crypto.randomBytes(4).toString('hex')}`,
-        }
-      });
-      tenantId = newTenant.id;
-    }
-
     const user = await prisma.user.create({
       data: {
         email,
         name,
         passwordHash,
-        tenantId: tenantId!,
+        tenantId,
       },
     });
 
@@ -101,11 +89,18 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       return;
     }
 
-    // Resolve tenant from client_id if provided
+    // Resolve tenant from client_id if provided. Tenant-scoped logins must map to a
+    // real tenant before we perform the lookup.
+    const clientId = req.body.client_id as string | undefined;
     let tenantId: string | null = null;
-    if (req.body.client_id) {
-      const tenant = await prisma.tenant.findUnique({ where: { clientId: req.body.client_id }, select: { id: true } });
-      if (tenant) tenantId = tenant.id;
+    if (clientId) {
+      const tenant = await prisma.tenant.findUnique({ where: { clientId }, select: { id: true } });
+      if (!tenant) {
+        res.status(400).json({ error: "Unknown client_id" });
+        return;
+      }
+
+      tenantId = tenant.id;
     }
 
     // --- Brute-Force Lockout Check ---
@@ -120,7 +115,7 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     }
 
     const user = await prisma.user.findFirst({
-      where: { email, tenantId },
+      where: tenantId ? { email, tenantId } : { email },
     });
 
     if (!user || !user.passwordHash) {
@@ -206,7 +201,17 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     });
     const entitlementScopes = entitlements.map(e => `plan:${e.planId}`);
 
-    const { accessToken, refreshToken } = await generateTokens(user.id, sessionId, [], user.roles, user.name, undefined, entitlementScopes);
+    const { accessToken, refreshToken } = await generateTokens(
+      user.id,
+      sessionId,
+      [],
+      user.roles,
+      user.name,
+      undefined,
+      entitlementScopes,
+      user.email,
+      clientId ? undefined : "developer"
+    );
     const refreshTokenHash = await hashPassword(refreshToken);
 
     const session = await prisma.$transaction(async (tx) => {

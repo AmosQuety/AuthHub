@@ -23,8 +23,10 @@ export default function Login({ onIntentPrefetchDashboard }: LoginProps) {
   const location = useLocation();
   const { tenant } = useTenantState();
   const { success, error: toastError } = useToast();
+  const searchParams = new URLSearchParams(location.search);
+  const clientId = searchParams.get("client_id");
 
-  const from = location.state?.from?.pathname + location.state?.from?.search || "/";
+  const from = location.state?.from?.pathname + location.state?.from?.search || "/dashboard";
 
   const [actionState, submitLogin, isPending] = useActionState<LoginActionState, FormData>(
     async (_previousState, formData) => {
@@ -36,7 +38,11 @@ export default function Login({ onIntentPrefetchDashboard }: LoginProps) {
       }
 
       try {
-        const data = await api.post("/auth/login", { email, password });
+        const data = await api.post("/auth/login", {
+          email,
+          password,
+          ...(clientId ? { client_id: clientId } : {}),
+        });
         if (data.mfaRequired) {
           navigate("/mfa-challenge", { state: { mfaToken: data.mfaToken } });
           return { error: "" };
@@ -90,10 +96,12 @@ export default function Login({ onIntentPrefetchDashboard }: LoginProps) {
   }, [onIntentPrefetchDashboard]);
 
   const handleGoogleLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"}/auth/google?mode=login`;
+    const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
+    window.location.href = `${baseUrl}/auth/google?mode=login`;
   };
   const handleGithubLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"}/auth/github?mode=login`;
+    const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
+    window.location.href = `${baseUrl}/auth/github?mode=login`;
   };
 
   const errorMessage = oauthError || actionState.error;

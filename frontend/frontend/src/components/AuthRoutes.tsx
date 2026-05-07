@@ -34,7 +34,7 @@ export function PublicRoute() {
 
   // If already logged in, public auth pages (login/register) redirect to dashboard
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;

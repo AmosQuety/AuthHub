@@ -29,7 +29,8 @@ export default function CompleteProfile() {
     // Fetch current user data with the access token
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/v1/auth/me`, {
+        const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
+        const response = await fetch(`${baseUrl}/auth/me`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!response.ok) throw new Error("Failed to fetch user data");
@@ -62,7 +63,8 @@ export default function CompleteProfile() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/v1/auth/complete-profile`, {
+      const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
+      const response = await fetch(`${baseUrl}/auth/complete-profile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
