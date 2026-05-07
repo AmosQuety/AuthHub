@@ -1,6 +1,6 @@
 import { useActionState, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { api, ApiError } from "../lib/api";
+import { api, ApiError, API_URL } from "../lib/api";
 import { useToast } from "../contexts/ToastContext";
 import { Mail, Lock, Loader2, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
 import { SocialLoginButtons } from "../components/SocialLoginButtons";
@@ -85,12 +85,10 @@ export default function Register() {
   );
 
   const handleGoogleRegister = () => {
-    const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
-    window.location.href = `${baseUrl}/auth/google?mode=register`;
+    window.location.href = `${API_URL}/auth/google?mode=register`;
   };
   const handleGithubRegister = () => {
-    const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
-    window.location.href = `${baseUrl}/auth/github?mode=register`;
+    window.location.href = `${API_URL}/auth/github?mode=register`;
   };
 
   return (

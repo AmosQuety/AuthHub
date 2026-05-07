@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "../contexts/ToastContext";
 import { useAuth } from "../contexts/AuthContext";
+import { API_URL } from "../lib/api";
 import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 
 export default function CompleteProfile() {
@@ -29,8 +30,7 @@ export default function CompleteProfile() {
     // Fetch current user data with the access token
     const fetchUserData = async () => {
       try {
-        const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
-        const response = await fetch(`${baseUrl}/auth/me`, {
+        const response = await fetch(`${API_URL}/auth/me`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (!response.ok) throw new Error("Failed to fetch user data");
@@ -63,8 +63,7 @@ export default function CompleteProfile() {
 
     setIsLoading(true);
     try {
-      const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
-      const response = await fetch(`${baseUrl}/auth/complete-profile`, {
+      const response = await fetch(`${API_URL}/auth/complete-profile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,5 +1,9 @@
 // src/lib/api.ts
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+const RAW_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+export const API_URL = RAW_API_URL.replace(/\/+$/, '').endsWith('/api/v1')
+  ? RAW_API_URL.replace(/\/+$/, '')
+  : `${RAW_API_URL.replace(/\/+$/, '')}/api/v1`;
 
 export class ApiError extends Error {
   status: number;
