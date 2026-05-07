@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, logout, me, refresh, revokeToken, introspectToken, sendVerificationEmail, verifyEmail, forgotPassword, resetPassword, updatePassword, verifyPassword, unlinkProvider, getSessions, deleteSession, revokeOtherSessions, getAuditLogs, updateProfile } from "./controller.js";
+import { register, login, logout, me, roleCheck, refresh, revokeToken, introspectToken, sendVerificationEmail, verifyEmail, forgotPassword, resetPassword, updatePassword, verifyPassword, unlinkProvider, getSessions, deleteSession, revokeOtherSessions, getAuditLogs, updateProfile } from "./controller.js";
 import { completeProfile } from "./profile.js";
 import { googleLogin, googleCallback, githubLogin, githubCallback } from "./social.js";
 import mfaRouter from "../mfa/router.js";
@@ -48,6 +48,7 @@ router.post("/logout", logout);
 
 // Protected
 router.get("/me", authenticate, me);
+router.get("/role-check", authenticate, roleCheck);
 router.patch("/profile", authenticate, updateProfile);
 router.post("/complete-profile", authenticate, completeProfile);
 router.get("/sessions", authenticate, getSessions);

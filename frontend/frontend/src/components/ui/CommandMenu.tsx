@@ -5,6 +5,7 @@ import {
   Terminal, Activity, Command, X, ArrowRight, Loader2
 } from 'lucide-react';
 import { api } from '../../lib/api';
+import { useAuthState } from '../../contexts/AuthContext';
 
 interface CommandResult {
   id: string;
@@ -21,6 +22,7 @@ interface CommandMenuProps {
 
 export const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const { user } = useAuthState();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<CommandResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,13 +30,20 @@ export const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose }) => 
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Static navigation options
-  const staticOptions: CommandResult[] = [
-    { id: 'overview', title: 'Go to Overview', type: 'Page', url: '/', icon: 'Activity' },
-    { id: 'users', title: 'Manage Users', type: 'Page', url: '/users', icon: 'Users' },
-    { id: 'apps', title: 'OAuth Applications', type: 'Page', url: '/developer/applications', icon: 'Globe' },
-    { id: 'logs', title: 'API Observability', type: 'Page', url: '/developer/api-logs', icon: 'Terminal' },
-    { id: 'security', title: 'Security & Sessions', type: 'Page', url: '/security/sessions', icon: 'Shield' },
-  ];
+  const isAdmin = !!user?.roles?.includes('ADMIN');
+  const staticOptions: CommandResult[] = isAdmin
+    ? [
+        { id: 'overview', title: 'Go to Admin Overview', type: 'Page', url: '/admin/dashboard', icon: 'Activity' },
+        { id: 'admin-users', title: 'Manage Users', type: 'Page', url: '/admin/users', icon: 'Users' },
+        { id: 'admin-observability', title: 'Platform Observability', type: 'Page', url: '/admin/observability', icon: 'Terminal' },
+        { id: 'security', title: 'Security & Sessions', type: 'Page', url: '/security/sessions', icon: 'Shield' },
+      ]
+    : [
+        { id: 'overview', title: 'Go to Overview', type: 'Page', url: '/dashboard', icon: 'Activity' },
+        { id: 'apps', title: 'OAuth Applications', type: 'Page', url: '/developer/applications', icon: 'Globe' },
+        { id: 'logs', title: 'API Observability', type: 'Page', url: '/developer/api-logs', icon: 'Terminal' },
+        { id: 'security', title: 'Security & Sessions', type: 'Page', url: '/security/sessions', icon: 'Shield' },
+      ];
 
   useEffect(() => {
     if (isOpen) {

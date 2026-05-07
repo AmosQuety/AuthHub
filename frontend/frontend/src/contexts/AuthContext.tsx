@@ -44,8 +44,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Removed useCallback: React 19 Compiler handles function memoization automatically
   const refreshProfile = async () => {
     try {
-      const data = await api.get("/auth/me");
-      setUser(data.user);
+      const [profileData, roleCheckData] = await Promise.all([
+        api.get("/auth/me"),
+        api.get("/auth/role-check"),
+      ]);
+
+      setUser({
+        ...profileData.user,
+        // Always trust server role-check roles during bootstrap to avoid stale-token role drift.
+        roles: roleCheckData.roles || profileData.user?.roles,
+      });
     } catch (e) {
       setUser(null);
       localStorage.removeItem("accessToken");

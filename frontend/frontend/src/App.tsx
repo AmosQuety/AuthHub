@@ -6,7 +6,7 @@ import { TenantProvider } from "./contexts/TenantContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { ThemeToggle } from "./components/ThemeToggle";
-import { ProtectedRoute, PublicRoute } from "./components/AuthRoutes";
+import { ProtectedRoute, PublicRoute, AdminOnlyRoute, NonAdminOnlyRoute } from "./components/AuthRoutes";
 // import { AdminRoute } from "./components/AdminRoute" // Removed unused admin route import
 
 declare const __INCLUDE_ADMIN__: boolean;
@@ -125,12 +125,13 @@ export default function App() {
                   {/* Enterprise Authenticated Shell */}
                   <Route element={<ProtectedRoute />}>
                     <Route element={<AppShell />}>
-                      <Route path="/dashboard" element={<Overview />} />
-                      {/* Removed /users from ordinary system per user request */}
-                      
-                      <Route path="/developer/applications" element={<Applications />} />
-                      <Route path="/developer/webhooks" element={<Webhooks />} />
-                      <Route path="/developer/api-logs" element={<ApiLogs />} />
+                      <Route element={<NonAdminOnlyRoute />}>
+                        <Route path="/dashboard" element={<Overview />} />
+                        {/* Removed /users from ordinary system per user request */}
+                        <Route path="/developer/applications" element={<Applications />} />
+                        <Route path="/developer/webhooks" element={<Webhooks />} />
+                        <Route path="/developer/api-logs" element={<ApiLogs />} />
+                      </Route>
                       
                       <Route path="/security/sessions" element={<Sessions />} />
                       <Route path="/security/mfa" element={<MfaSetup />} />
@@ -139,7 +140,7 @@ export default function App() {
                       <Route path="/account/profile" element={<Profile />} />
 
                       {AdminUsers && AdminClients && AdminTenantConfig && AdminObservability ? (
-                        <>
+                        <Route element={<AdminOnlyRoute />}>
                           <Route path="/admin/users" element={<AdminUsers />} />
                           <Route path="/admin/clients" element={<AdminClients />} />
                           <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -148,7 +149,7 @@ export default function App() {
                           <Route path="/admin/keys" element={<RootKeys />} />
                           <Route path="/settings/branding" element={<AdminTenantConfig />} />
                           <Route path="/admin/observability" element={<AdminObservability />} />
-                        </>
+                        </Route>
                       ) : null}
                     </Route>
 
