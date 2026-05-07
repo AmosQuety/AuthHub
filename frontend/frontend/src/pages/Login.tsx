@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthActions } from "../contexts/AuthContext";
 import { useTenantState } from "../contexts/TenantContext";
 import { useToast } from "../contexts/ToastContext";
-import { api, ApiError } from "../lib/api";
+import { api, ApiError, API_URL } from "../lib/api";
 import { SocialLoginButtons } from "../components/SocialLoginButtons";
 import { Mail, Lock, Loader2, ShieldCheck } from "lucide-react";
 
@@ -96,12 +96,10 @@ export default function Login({ onIntentPrefetchDashboard }: LoginProps) {
   }, [onIntentPrefetchDashboard]);
 
   const handleGoogleLogin = () => {
-    const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
-    window.location.href = `${baseUrl}/auth/google?mode=login`;
+    window.location.href = `${API_URL}/auth/google?mode=login`;
   };
   const handleGithubLogin = () => {
-    const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
-    window.location.href = `${baseUrl}/auth/github?mode=login`;
+    window.location.href = `${API_URL}/auth/github?mode=login`;
   };
 
   const errorMessage = oauthError || actionState.error;

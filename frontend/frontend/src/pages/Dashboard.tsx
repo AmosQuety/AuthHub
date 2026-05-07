@@ -2,6 +2,7 @@ import { use, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { api } from "../lib/api";
+import { API_URL } from "../lib/api";
 import { useToast } from "../contexts/ToastContext";
 import {
   LogOut, Laptop, Smartphone, Trash2,
@@ -75,8 +76,7 @@ export default function Dashboard() {
   const { success: toastSuccess, error: toastError } = useToast();
 
   const handleLink = (providerId: string) => {
-    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
-    window.location.href = `${baseUrl}/auth/${providerId}?mode=link&user_id=${user?.id}`;
+    window.location.href = `${API_URL}/auth/${providerId}?mode=link&user_id=${user?.id}`;
   };
 
   const handleUnlink = async (providerLinkId: string) => {
