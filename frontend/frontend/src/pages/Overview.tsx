@@ -72,6 +72,22 @@ export default function Overview() {
     ? Math.round((stats.mfaStats.enabled / (stats.totalUsers || 1)) * 100)
     : 0;
 
+  const statCards = isAdmin
+    ? [
+        { label: "Org Identities", value: stats?.totalUsers?.toLocaleString(), icon: Users, color: "bg-blue-500" },
+        { label: "Active Sessions", value: stats?.activeSessions?.toLocaleString(), icon: Monitor, color: "bg-emerald-500" },
+        { label: "Auth Events Today", value: stats?.loginsToday?.toLocaleString(), icon: FileCode2, color: "bg-cyan-500" },
+        { label: "Your Clients", value: stats?.appCount?.toLocaleString(), icon: Package, color: "bg-violet-500" },
+      ]
+    : [
+        { label: "Recent Logins", value: stats?.totalLogins?.toLocaleString(), icon: FileCode2, color: "bg-cyan-500" },
+        { label: "Client Apps", value: stats?.appCount?.toLocaleString(), icon: Package, color: "bg-violet-500" },
+        { label: "Workspace", value: tenant?.name || "Default", icon: Users, color: "bg-blue-500" },
+        { label: "Activity Days", value: stats?.chartData?.length?.toLocaleString(), icon: Monitor, color: "bg-emerald-500" },
+      ];
+
+  const recentLogs = stats?.recentLogs ?? [];
+
   return (
     <div className={`space-y-8 transition-opacity duration-500 pb-12 ${mounted ? "opacity-100" : "opacity-0"}`}>
       
@@ -105,17 +121,7 @@ export default function Overview() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {isAdmin ? [
-          { label: "Org Identities", value: stats?.totalUsers?.toLocaleString(), icon: Users, color: "bg-blue-500" },
-          { label: "Active Sessions", value: stats?.activeSessions?.toLocaleString(), icon: Monitor, color: "bg-emerald-500" },
-          { label: "Auth Events Today", value: stats?.loginsToday?.toLocaleString(), icon: FileCode2, color: "bg-cyan-500" },
-          { label: "Your Clients", value: stats?.appCount?.toLocaleString(), icon: Package, color: "bg-violet-500" },
-        ] : [
-          { label: "Recent Logins", value: stats?.totalLogins?.toLocaleString(), icon: FileCode2, color: "bg-cyan-500" },
-          { label: "Client Apps", value: stats?.appCount?.toLocaleString(), icon: Package, color: "bg-violet-500" },
-          { label: "Workspace", value: tenant?.name || "Default", icon: Users, color: "bg-blue-500" },
-          { label: "Activity Days", value: stats?.chartData?.length?.toLocaleString(), icon: Monitor, color: "bg-emerald-500" },
-        ].map((stat, i) => (
+        {statCards.map((stat, i) => (
           <div key={i} className="glass-card p-5 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-24 h-24 bg-white/[0.02] rounded-bl-full -mr-8 -mt-8" />
             <p className="text-[10px] font-bold text-white/40 tracking-wider mb-3 uppercase">{stat.label}</p>
@@ -283,7 +289,7 @@ export default function Overview() {
             <Link to="/developer/api-logs" className="text-[10px] font-bold text-white/30 uppercase tracking-widest hover:text-white transition-colors">Audit Trail</Link>
           </div>
           <div className="p-2 space-y-1">
-            {stats?.recentLogs.map((log, i) => (
+            {recentLogs.map((log, i) => (
               <div key={i} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/[0.02] transition-colors group">
                 <div className="flex items-center gap-4">
                   <div className={`p-1.5 rounded-md ${log.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
