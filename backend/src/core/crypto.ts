@@ -102,7 +102,9 @@ export const generateTokens = async (
   roles: string[] = ["USER"], 
   name?: string | null, 
   impersonatorId?: string,
-  entitlementScopes: string[] = []
+  entitlementScopes: string[] = [],
+  email?: string,
+  role?: string
 ) => {
   const key = await getPrivateKey();
   const kid = await getKeyId();
@@ -113,6 +115,12 @@ export const generateTokens = async (
   const accessPayload: any = { sub: userId, sid: sessionId, roles };
   if (name) {
     accessPayload.name = name;
+  }
+  if (email) {
+    accessPayload.email = email;
+  }
+  if (role) {
+    accessPayload.role = role;
   }
   if (finalScopes.length > 0) {
     accessPayload.scopes = finalScopes;

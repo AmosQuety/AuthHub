@@ -3,6 +3,7 @@ import request from "supertest";
 import app from "../index.js";
 import prisma from "../db/client.js";
 import redis from "../db/redis.js";
+import { hashPassword } from "../core/crypto.js";
 
 // Mock nodemailer so no real emails fire during tests
 vi.mock("../../core/mailer.js", () => ({
@@ -22,10 +23,13 @@ async function registerUser(email: string, password = "TestPass123!") {
     .send({ email, password });
 }
 
-async function loginUser(email: string, password = "TestPass123!") {
+async function loginUser(email: string, password = "TestPass123!", clientId?: string) {
+  const payload: Record<string, string> = { email, password };
+  if (clientId) payload.client_id = clientId;
+
   return request(app)
     .post("/api/v1/auth/login")
-    .send({ email, password });
+    .send(payload);
 }
 
 // ---------------------------------------------------------------------------
@@ -76,6 +80,48 @@ describe("POST /api/v1/auth/login", () => {
   it("returns 401 for unknown email", async () => {
     const res = await loginUser("nobody@nowhere.com");
     expect(res.status).toBe(401);
+  });
+
+  it("scopes tenant logins by client_id", async () => {
+    const email = testEmail();
+    const passwordA = "TenantPass123!";
+    const passwordB = "TenantPass456!";
+
+    const tenantA = await prisma.tenant.create({
+      data: {
+        name: `Tenant A ${Date.now()}`,
+        clientId: `tenant-a-${Date.now()}`,
+      },
+    });
+
+    const tenantB = await prisma.tenant.create({
+      data: {
+        name: `Tenant B ${Date.now()}`,
+        clientId: `tenant-b-${Date.now()}`,
+      },
+    });
+
+    await prisma.user.create({
+      data: {
+        email,
+        tenantId: tenantA.id,
+        passwordHash: await hashPassword(passwordA),
+      },
+    });
+
+    await prisma.user.create({
+      data: {
+        email,
+        tenantId: tenantB.id,
+        passwordHash: await hashPassword(passwordB),
+      },
+    });
+
+    const okRes = await loginUser(email, passwordA, tenantA.clientId ?? undefined);
+    expect(okRes.status).toBe(200);
+
+    const badRes = await loginUser(email, passwordA, tenantB.clientId ?? undefined);
+    expect(badRes.status).toBe(401);
   });
 });
 

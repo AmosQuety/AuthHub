@@ -1,5 +1,5 @@
 import { useActionState, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { api, ApiError } from "../lib/api";
 import { useToast } from "../contexts/ToastContext";
 import { Mail, Lock, Loader2, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
@@ -46,7 +46,10 @@ export default function Register() {
   const [passwordPreview, setPasswordPreview] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { success, error: toastError } = useToast();
+  const searchParams = new URLSearchParams(location.search);
+  const clientId = searchParams.get("client_id");
 
   const [actionState, submitRegister, isPending] = useActionState<{ error: string }, FormData>(
     async (_previousState, formData) => {
@@ -62,7 +65,11 @@ export default function Register() {
       }
 
       try {
-        await api.post("/auth/register", { email, password });
+        await api.post("/auth/register", {
+          email,
+          password,
+          ...(clientId ? { client_id: clientId } : {}),
+        });
         success("Account created! Please sign in.");
         navigate("/login");
         return { error: "" };
@@ -78,10 +85,12 @@ export default function Register() {
   );
 
   const handleGoogleRegister = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"}/auth/google?mode=register`;
+    const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
+    window.location.href = `${baseUrl}/auth/google?mode=register`;
   };
   const handleGithubRegister = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1"}/auth/github?mode=register`;
+    const baseUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/+$/, '');
+    window.location.href = `${baseUrl}/auth/github?mode=register`;
   };
 
   return (
