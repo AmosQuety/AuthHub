@@ -15,7 +15,7 @@ export default function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [isAdmin] = useState(Array.isArray((user as any)?.roles) && (user as any).roles.includes("ADMIN"));
+  const isAdmin = Array.isArray((user as any)?.roles) && (user as any).roles.includes("ADMIN");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Keyboard shortcut for ⌘K
@@ -69,7 +69,7 @@ export default function AppShell() {
 
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-1">
-          <NavLink to="/" end className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+          <NavLink to={isAdmin ? "/admin/dashboard" : "/dashboard"} end className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
             <LayoutDashboard className="w-4 h-4" /> Overview
           </NavLink>
 
@@ -97,16 +97,20 @@ export default function AppShell() {
             </>
           )}
 
-          <p className="nav-group-label">Developer</p>
-          <NavLink to="/developer/applications" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <Globe className="w-4 h-4" /> Applications
-          </NavLink>
-          <NavLink to="/developer/webhooks" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <Webhook className="w-4 h-4" /> Webhooks
-          </NavLink>
-          <NavLink to="/developer/api-logs" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
-            <TerminalSquare className="w-4 h-4" /> API Logs
-          </NavLink>
+          {!isAdmin ? (
+            <>
+              <p className="nav-group-label">Developer</p>
+              <NavLink to="/developer/applications" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+                <Globe className="w-4 h-4" /> Applications
+              </NavLink>
+              <NavLink to="/developer/webhooks" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+                <Webhook className="w-4 h-4" /> Webhooks
+              </NavLink>
+              <NavLink to="/developer/api-logs" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>
+                <TerminalSquare className="w-4 h-4" /> API Logs
+              </NavLink>
+            </>
+          ) : null}
 
           <p className="nav-group-label">Security</p>
           <NavLink to="/security/sessions" className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}>

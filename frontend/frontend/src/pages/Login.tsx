@@ -25,8 +25,9 @@ export default function Login({ onIntentPrefetchDashboard }: LoginProps) {
   const { success, error: toastError } = useToast();
   const searchParams = new URLSearchParams(location.search);
   const clientId = searchParams.get("client_id");
-
-  const from = location.state?.from?.pathname + location.state?.from?.search || "/dashboard";
+  const fromPath = location.state?.from?.pathname as string | undefined;
+  const fromSearch = location.state?.from?.search as string | undefined;
+  const from = fromPath ? `${fromPath}${fromSearch || ""}` : "/dashboard";
 
   const [actionState, submitLogin, isPending] = useActionState<LoginActionState, FormData>(
     async (_previousState, formData) => {
@@ -49,7 +50,8 @@ export default function Login({ onIntentPrefetchDashboard }: LoginProps) {
         }
         login(data.accessToken, data.user);
         success("Logged in successfully");
-        navigate(from, { replace: true });
+        const isAdmin = Array.isArray(data.user?.roles) && data.user.roles.includes("ADMIN");
+        navigate(isAdmin ? "/admin/dashboard" : from, { replace: true });
         return { error: "" };
       } catch (err: any) {
         const msg = err instanceof ApiError ? err.message : "An unexpected error occurred";

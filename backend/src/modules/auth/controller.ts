@@ -367,6 +367,47 @@ export const me = async (req: Request, res: Response, next: NextFunction): Promi
   }
 };
 
+export const roleCheck = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        roles: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!dbUser) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const tokenRoles = Array.isArray(req.user?.roles) ? [...req.user.roles].sort() : [];
+    const dbRoles = [...dbUser.roles].sort();
+    const roleDrift = JSON.stringify(tokenRoles) !== JSON.stringify(dbRoles);
+
+    res.set("Cache-Control", "no-store");
+    res.set("Pragma", "no-cache");
+    res.json({
+      userId: dbUser.id,
+      roles: dbUser.roles,
+      roleDrift,
+      checkedAt: new Date().toISOString(),
+      userUpdatedAt: dbUser.updatedAt.toISOString(),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateProfile = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const userId = req.user?.sub;
