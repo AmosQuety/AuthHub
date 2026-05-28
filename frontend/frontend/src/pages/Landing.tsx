@@ -126,7 +126,7 @@ export default function Landing() {
 const { clientId, clientSecret } = await registerApp();
 
 // Redirect user to AuthHub for authentication
-window.location = `https://auth-hubb.vercel.app/oauth/authorize?
+window.location = \`https://auth-hubb.vercel.app/oauth/authorize?
   client_id=\${clientId}&
   redirect_uri=\${appUrl}&
   response_type=code&
