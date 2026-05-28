@@ -11,7 +11,7 @@ const seedZooClient = async () => {
       where: { clientId },
       update: {
         clientSecretHash,
-        redirectUris: ["http://localhost:4000/callback"],
+        redirectUris: ["https://auth-hubb.vercel.app/callback"],
         name: "Virtual Zoo Portal",
         scopes: ["openid", "profile", "email"],
       },
@@ -20,7 +20,7 @@ const seedZooClient = async () => {
         clientSecretHash,
         isPublic: false,
         scopes: ["openid", "profile", "email"],
-        redirectUris: ["http://localhost:4000/callback"],
+        redirectUris: ["https://auth-hubb.vercel.app/callback"],
         name: "Virtual Zoo Portal",
       },
     });

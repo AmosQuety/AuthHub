@@ -15,7 +15,7 @@ const seedClient = async () => {
         clientSecretHash,
         isPublic: false,
         scopes: ["openid", "profile", "email"],
-        redirectUris: ["http://localhost:3000/callback", "https://oauth.pstmn.io/v1/callback"],
+        redirectUris: ["https://auth-hubb.vercel.app/callback", "https://oauth.pstmn.io/v1/callback"],
         name: "AuthHub Web Client",
       },
     });
@@ -29,7 +29,7 @@ const seedClient = async () => {
         clientSecretHash: "", // No secret needed
         isPublic: true,
         scopes: ["openid", "profile"],
-        redirectUris: ["http://localhost:3000/callback"],
+        redirectUris: ["https://auth-hubb.vercel.app/callback"],
         name: "AuthHub Public Client",
       },
     });

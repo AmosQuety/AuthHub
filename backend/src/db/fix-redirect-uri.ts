@@ -1,7 +1,7 @@
 import prisma from "./client.js";
 
 const CLIENT_ID = "19d4f71e-0043-46a7-bc49-16202f475806"; // The demo app client ID
-const REDIRECT_URI = "http://localhost:8888/callback";
+const REDIRECT_URI = "https://auth-hubb.vercel.app/callback";
 
 async function fix() {
   const client = await prisma.oAuthClient.findUnique({ where: { clientId: CLIENT_ID } });
