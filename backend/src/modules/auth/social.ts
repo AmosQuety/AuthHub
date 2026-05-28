@@ -218,10 +218,12 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
         });
 
         // If profile is incomplete, redirect to completion page instead of dashboard
+        // Include a short-lived access token in the redirect URL so cross-domain
+        // frontends can consume it (short-lived handover). Token is URL-encoded.
         if (!isProfileComplete) {
-            res.redirect(`${FRONTEND_URL}/auth/complete-profile`);
+            res.redirect(`${FRONTEND_URL}/auth/complete-profile?access_token=${encodeURIComponent(accessToken)}`);
         } else {
-            res.redirect(`${FRONTEND_URL}/login/success`);
+            res.redirect(`${FRONTEND_URL}/login/success?access_token=${encodeURIComponent(accessToken)}`);
         }
     } catch (error) {
         console.error("Google OAuth Error:", error);
@@ -472,10 +474,12 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
         });
 
         // If profile is incomplete, redirect to completion page instead of dashboard
+        // Include a short-lived access token in the redirect URL so cross-domain
+        // frontends can consume it (short-lived handover). Token is URL-encoded.
         if (!isProfileComplete) {
-            res.redirect(`${FRONTEND_URL}/auth/complete-profile`);
+            res.redirect(`${FRONTEND_URL}/auth/complete-profile?access_token=${encodeURIComponent(accessToken)}`);
         } else {
-            res.redirect(`${FRONTEND_URL}/login/success`);
+            res.redirect(`${FRONTEND_URL}/login/success?access_token=${encodeURIComponent(accessToken)}`);
         }
     } catch (error) {
         console.error("GitHub OAuth Error:", error);
