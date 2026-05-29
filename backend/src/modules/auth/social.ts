@@ -8,8 +8,10 @@ function slugify(str: string): string {
   return str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 }
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3001";
+const FRONTEND_URL = process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:3001";
 const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || `${BASE_URL}/api/v1/auth/google/callback`;
+const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || `${BASE_URL}/api/v1/auth/github/callback`;
 
 // --- GOOGLE OAUTH ---
 
@@ -21,7 +23,7 @@ export const googleLogin = (req: Request, res: Response) => {
     const { client_id, mode, user_id } = req.query;
     const state = Buffer.from(JSON.stringify({ client_id, mode, user_id })).toString('base64url');
 
-    const redirectUri = `${BASE_URL}/api/v1/auth/google/callback`;
+    const redirectUri = GOOGLE_CALLBACK_URL;
     const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=profile email&state=${state}`;
 
     res.redirect(url);
@@ -37,7 +39,7 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
 
         const clientId = process.env.GOOGLE_CLIENT_ID;
         const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-        const redirectUri = `${BASE_URL}/api/v1/auth/google/callback`;
+        const redirectUri = GOOGLE_CALLBACK_URL;
 
         // 1. Exchange Auth Code for Tokens
         const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
@@ -240,7 +242,7 @@ export const githubLogin = (req: Request, res: Response) => {
     const { client_id, mode, user_id } = req.query;
     const state = Buffer.from(JSON.stringify({ client_id, mode, user_id })).toString('base64url');
 
-    const redirectUri = `${BASE_URL}/api/v1/auth/github/callback`;
+    const redirectUri = GITHUB_CALLBACK_URL;
     const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email&state=${state}`;
 
     res.redirect(url);
@@ -256,7 +258,7 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
 
         const clientId = process.env.GITHUB_CLIENT_ID;
         const clientSecret = process.env.GITHUB_CLIENT_SECRET;
-        const redirectUri = `${BASE_URL}/api/v1/auth/github/callback`;
+        const redirectUri = GITHUB_CALLBACK_URL;
 
         // 1. Exchange Auth Code for tokens
         const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
