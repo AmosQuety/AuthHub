@@ -1,6 +1,7 @@
 import prisma from "./client.js";
 import Redis from "ioredis";
 import dotenv from "dotenv";
+import { Role } from "@prisma/client";
 
 dotenv.config();
 
@@ -28,7 +29,7 @@ async function makeAdmin() {
     process.exit(1);
   }
 
-  const nextRoles = Array.from(new Set([...(user.roles || []), "ADMIN", "USER"]));
+  const nextRoles: Role[] = Array.from(new Set([...(user.roles || []), Role.ADMIN, Role.USER]));
 
   const updatedUser = await prisma.user.update({
     where: { id: user.id },
