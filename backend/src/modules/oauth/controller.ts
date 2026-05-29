@@ -59,7 +59,7 @@ export const checkConsent = async (req: Request, res: Response, next: NextFuncti
  */
 export const authorizeRedirect = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const frontendUrl = process.env.CLIENT_URL || process.env.FRONTEND_URL || "http://localhost:5173";
     
     // Construct the frontend destination URL
     const target = new URL(`${frontendUrl}/authorize`);
