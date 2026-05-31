@@ -29,6 +29,7 @@ model User {
   updatedAt      DateTime       @updatedAt @map("updated_at")
   roles          Role[]         @default([USER])
   tenantId       String?        @map("tenant_id") @db.Uuid
+  ownedTenants   Tenant[]       @relation("TenantOwner")
   sessions       Session[]
   authProviders  AuthProvider[]
   ownedClients   OAuthClient[]
@@ -126,6 +127,8 @@ model Tenant {
   id            String        @id @default(uuid()) @db.Uuid
   name          String
   clientId      String?       @unique @map("client_id")       // e.g. 'xemora_aB3kP9mNqR'
+  ownerId       String?       @map("owner_id") @db.Uuid
+  owner         User?         @relation("TenantOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   customDomain  String?       @unique @map("custom_domain")   // e.g. 'auth.xemora.com'
   logoUrl       String?       @map("logo_url")
   primaryColor  String?       @map("primary_color")

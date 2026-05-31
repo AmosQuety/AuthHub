@@ -17,10 +17,13 @@ vi.mock("../../core/mailer.js", () => ({
 // ---------------------------------------------------------------------------
 const testEmail = () => `test_${Date.now()}@authhub.test`;
 
-async function registerUser(email: string, password = "TestPass123!") {
+async function registerUser(email: string, password = "TestPass123!", clientId?: string) {
+  const payload: Record<string, string> = { email, password };
+  if (clientId) payload.client_id = clientId;
+
   return request(app)
     .post("/api/v1/auth/register")
-    .send({ email, password });
+    .send(payload);
 }
 
 async function loginUser(email: string, password = "TestPass123!", clientId?: string) {
@@ -114,7 +117,7 @@ describe("POST /api/v1/auth/login", () => {
       },
     });
 
-    await registerUser(email);
+    await registerUser(email, "TestPass123!", tenant.clientId ?? undefined);
 
     const okRes = await loginUser(email, "TestPass123!", tenant.clientId ?? undefined);
     expect(okRes.status).toBe(200);

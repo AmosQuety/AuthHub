@@ -116,19 +116,45 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+        // If a tenantId was resolved from the OAuth state (client_id), prefer
+        // looking up the user inside that tenant. This ensures tenant-scoped
+        // apps find only users that belong to the tenant.
+        let user;
+        if (tenantId) {
+            user = await prisma.user.findFirst({ where: { email: normalizedEmail, tenantId } });
+        } else {
+            user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+        }
 
         // AUTO-TENANT: If we need to create a fresh account and no tenantId is resolved,
-        // create a new one for that account.
+        // create a new tenant + user in a single transaction and set the tenant owner
+        // to the newly-created user. This ensures the tenant has an owner recorded.
         if (!tenantId && !user) {
             const tenantName = `${googleName || normalizedEmail.split('@')[0]}'s Workspace`;
-            const newTenant = await prisma.tenant.create({
-                data: {
-                    name: tenantName,
-                    clientId: `${slugify(tenantName)}_${crypto.randomBytes(4).toString('hex')}`,
-                }
+            const clientIdSeed = `${slugify(tenantName)}_${crypto.randomBytes(4).toString('hex')}`;
+
+            const result = await prisma.$transaction(async (tx) => {
+                const newTenant = await tx.tenant.create({
+                    data: { name: tenantName, clientId: clientIdSeed }
+                });
+
+                const newUser = await tx.user.create({
+                    data: {
+                        email: normalizedEmail,
+                        emailVerified: verified_email,
+                        name: googleName || null,
+                        profilePictureUrl: profilePicture || null,
+                        tenantId: newTenant.id,
+                    }
+                });
+
+                await tx.tenant.update({ where: { id: newTenant.id }, data: { ownerId: newUser.id } });
+
+                return { newTenant, newUser };
             });
-            tenantId = newTenant.id;
+
+            tenantId = result.newTenant.id;
+            user = result.newUser;
         }
 
         if (!user) {
@@ -369,19 +395,44 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+        // If a tenantId was resolved from the OAuth state (client_id), prefer
+        // looking up the user inside that tenant so tenant-scoped logins work.
+        let user;
+        if (tenantId) {
+            user = await prisma.user.findFirst({ where: { email: normalizedEmail, tenantId } });
+        } else {
+            user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+        }
 
         // AUTO-TENANT: If we need to create a fresh account and no tenantId is resolved,
-        // create a new one for that account.
+        // create a new tenant + user in a single transaction and set the tenant owner
+        // to the newly-created user. This ensures the tenant has an owner recorded.
         if (!tenantId && !user) {
             const tenantName = `${githubName || normalizedEmail.split('@')[0]}'s Workspace`;
-            const newTenant = await prisma.tenant.create({
-                data: {
-                    name: tenantName,
-                    clientId: `${slugify(tenantName)}_${crypto.randomBytes(4).toString('hex')}`,
-                }
+            const clientIdSeed = `${slugify(tenantName)}_${crypto.randomBytes(4).toString('hex')}`;
+
+            const result = await prisma.$transaction(async (tx) => {
+                const newTenant = await tx.tenant.create({
+                    data: { name: tenantName, clientId: clientIdSeed }
+                });
+
+                const newUser = await tx.user.create({
+                    data: {
+                        email: normalizedEmail,
+                        emailVerified: true,
+                        name: githubName || null,
+                        profilePictureUrl: profilePicture || null,
+                        tenantId: newTenant.id,
+                    }
+                });
+
+                await tx.tenant.update({ where: { id: newTenant.id }, data: { ownerId: newUser.id } });
+
+                return { newTenant, newUser };
             });
-            tenantId = newTenant.id;
+
+            tenantId = result.newTenant.id;
+            user = result.newUser;
         }
 
         if (!user) {

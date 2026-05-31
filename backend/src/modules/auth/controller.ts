@@ -114,9 +114,9 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       return;
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    const user = tenantId
+      ? await prisma.user.findUnique({ where: { email } })
+      : await prisma.user.findUnique({ where: { email } });
 
     if (!user || !user.passwordHash) {
       logger.info({ email }, "login_failed_user_not_found");
@@ -127,6 +127,13 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     }
 
     const isValid = await verifyPasswordCrypto(user.passwordHash, password);
+
+    if (tenantId && user.tenantId !== tenantId) {
+      logger.info({ email, userId: user.id, tenantId }, "login_failed_tenant_mismatch");
+      await BruteForceService.recordFailure(email);
+      res.status(401).json({ error: "Invalid credentials" });
+      return;
+    }
 
     if (!isValid) {
       logger.info({ email, userId: user.id }, "login_failed_password_mismatch");
@@ -746,6 +753,11 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
+
+    if (tenantId && user?.tenantId !== tenantId) {
+      res.json({ message: "If that email exists, a reset link has been sent." });
+      return;
+    }
     if (!user) {
       res.json({ message: "If that email exists, a reset link has been sent." });
       return;

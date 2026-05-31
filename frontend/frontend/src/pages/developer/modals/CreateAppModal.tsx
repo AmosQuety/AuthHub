@@ -1,5 +1,6 @@
 import { Code, Globe, Activity } from 'lucide-react';
 import React from 'react';
+import { AlertTriangle } from 'lucide-react';
 
 interface CreateAppModalProps {
   setShowCreateModal: (show: boolean) => void;
@@ -14,6 +15,7 @@ interface CreateAppModalProps {
   isConfidential: boolean;
   setIsConfidential: (confidential: boolean) => void;
   handleCreate: (e: React.FormEvent) => Promise<void>;
+  createError?: string;
 }
 
 export function CreateAppModal({
@@ -28,7 +30,8 @@ export function CreateAppModal({
   setNewClientUris,
   isConfidential,
   setIsConfidential,
-  handleCreate
+  handleCreate,
+  createError
 }: CreateAppModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -96,6 +99,12 @@ export function CreateAppModal({
             </p>
 
             <form onSubmit={handleCreate} className="space-y-6">
+              {createError && (
+                <div className="flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                  <AlertTriangle className="mt-0.5 w-4 h-4 shrink-0 text-red-300" />
+                  <div>{createError}</div>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Application Name</label>
                 <input 

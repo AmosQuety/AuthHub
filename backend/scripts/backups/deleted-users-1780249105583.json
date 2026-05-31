@@ -1,0 +1,804 @@
+[
+  {
+    "id": "da585e9d-9263-4497-9d38-306634982186",
+    "found": true,
+    "user": {
+      "id": "da585e9d-9263-4497-9d38-306634982186",
+      "email": "amosnabasa256@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": "+256784270769",
+      "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIFco2SRXLGIfIgYG4B6HQSWDu3Q1djtRMvNTeIoS4BvwhabA=s96-c",
+      "passwordHash": "$argon2id$v=19$m=65536,t=3,p=4$pxDswQUq2tZJuPDrhE2VhQ$J2p1+By2UmXa4lAPHigScqDhjOsY813OstaBAQoJBsM",
+      "emailVerified": false,
+      "tosAcceptedAt": "2026-05-03T13:16:46.959Z",
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-03-22T18:31:22.597Z",
+      "updatedAt": "2026-05-03T13:16:46.960Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": null,
+      "sessions": [
+        {
+          "id": "35c1409a-33b9-4dd6-997b-fb25d785dcf0",
+          "userId": "da585e9d-9263-4497-9d38-306634982186",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$JuXFo7xON9+JfedSBkFhcg$iVqo+S6WpSRI/3s0L7ULjE5TCvGEuJAcKESZ7YO0Yfg",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+          "ipAddress": "127.0.0.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-05-12T14:08:05.979Z",
+          "createdAt": "2026-05-05T14:08:05.985Z"
+        }
+      ],
+      "authProviders": [
+        {
+          "id": "8ae00ac5-eefc-4cb2-89d6-9464d16b7a19",
+          "userId": "da585e9d-9263-4497-9d38-306634982186",
+          "provider": "google",
+          "providerId": "110065759945837056435",
+          "providerEmail": "amosnabasa256@gmail.com",
+          "createdAt": "2026-04-25T18:15:49.483Z"
+        }
+      ],
+      "mfaMethods": [],
+      "auditLogs": [
+        {
+          "id": "54c4e28a-f370-4dfe-a437-cb4decae3001",
+          "userId": "da585e9d-9263-4497-9d38-306634982186",
+          "action": "LOGIN",
+          "ipAddress": "127.0.0.1",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+          "status": "SUCCESS",
+          "details": "{\"riskScore\":0,\"sessionId\":\"0f7eb953-16e1-42ad-8e67-f594ac89aa91\"}",
+          "createdAt": "2026-03-22T18:32:28.868Z"
+        }
+      ],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "8a66fc54-b317-408f-a629-99e45619ac76",
+    "found": true,
+    "user": {
+      "id": "8a66fc54-b317-408f-a629-99e45619ac76",
+      "email": "amosnabasa256@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": null,
+      "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIFco2SRXLGIfIgYG4B6HQSWDu3Q1djtRMvNTeIoS4BvwhabA=s96-c",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": null,
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-28T19:50:11.137Z",
+      "updatedAt": "2026-05-28T19:50:11.137Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "a57be8ee-8090-4c6f-9cfc-ba8fd7a5caef",
+      "sessions": [
+        {
+          "id": "828e7f56-2946-43b1-aa6f-570f525dd637",
+          "userId": "8a66fc54-b317-408f-a629-99e45619ac76",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$X6hk03DLqiAnQvU2AUufKg$qo59iphBWGnzmTPxyIA42bMSnPe7EZq2hCq1QMh5qQU",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.25.225.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-04T19:50:13.103Z",
+          "createdAt": "2026-05-28T19:50:13.104Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "a922ba04-f823-4891-98fc-26f2405023e8",
+    "found": true,
+    "user": {
+      "id": "a922ba04-f823-4891-98fc-26f2405023e8",
+      "email": "amosnabasa256@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": null,
+      "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIFco2SRXLGIfIgYG4B6HQSWDu3Q1djtRMvNTeIoS4BvwhabA=s96-c",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": null,
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-28T20:05:19.602Z",
+      "updatedAt": "2026-05-28T20:05:19.602Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "7ecb046b-e78e-4c6b-9f47-fb44dba31ca6",
+      "sessions": [
+        {
+          "id": "1d426e4d-ec19-4660-a362-aee3b04c1250",
+          "userId": "a922ba04-f823-4891-98fc-26f2405023e8",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$pWK7T/9a47VQ5tBizRFmjA$58TY5RXEX8WVf8xfZZnkik/IRQMgx7Spf7oNd7Ejxp4",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.28.174.131",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-04T20:05:21.405Z",
+          "createdAt": "2026-05-28T20:05:21.406Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "9abafbc2-c8f5-4074-99bd-aa987e0e1450",
+    "found": true,
+    "user": {
+      "id": "9abafbc2-c8f5-4074-99bd-aa987e0e1450",
+      "email": "amosnabasa256@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": "+256 78427768",
+      "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIFco2SRXLGIfIgYG4B6HQSWDu3Q1djtRMvNTeIoS4BvwhabA=s96-c",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": "2026-05-31T15:11:25.655Z",
+      "privacyAcceptedAt": "2026-05-31T15:11:25.655Z",
+      "createdAt": "2026-05-29T10:01:36.507Z",
+      "updatedAt": "2026-05-31T15:11:25.656Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "00d0f90f-8e60-448c-9838-c22d4bb3dd72",
+      "sessions": [
+        {
+          "id": "2531df78-f7d4-4ab6-87ae-e43ae6d4efbb",
+          "userId": "9abafbc2-c8f5-4074-99bd-aa987e0e1450",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$g2nBaoB2aXgg90CaF0rYIA$Cw+TpFM5CmuQQfplYaVBkQQIomudMiXfGYxEwNcQvJo",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.26.66.4",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-05T10:01:38.449Z",
+          "createdAt": "2026-05-29T10:01:38.450Z"
+        },
+        {
+          "id": "2e6d60cf-c587-43b8-889a-b2490ac0dbb3",
+          "userId": "9abafbc2-c8f5-4074-99bd-aa987e0e1450",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$5ggpL05RifiVRjG7Qjvxgg$Ex7NOXVMrjAJpOmZsk7fTJg9HvvsE6AVW2eCnNrGVhM",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.27.155.5",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-07T14:33:52.460Z",
+          "createdAt": "2026-05-31T14:33:52.461Z"
+        },
+        {
+          "id": "9ccd6be5-3e6f-4a76-a6b4-550897d9caba",
+          "userId": "9abafbc2-c8f5-4074-99bd-aa987e0e1450",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$NKpmCGDiPRWqAD+bs0W7uw$FfcRaqzlPub0taKfNfP32uDY3Jlqr1hHO0Jrul5sKZo",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.27.155.5",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-07T14:34:17.963Z",
+          "createdAt": "2026-05-31T14:34:17.964Z"
+        },
+        {
+          "id": "c5b54ea1-d2a0-43ed-8ca8-8b408301007c",
+          "userId": "9abafbc2-c8f5-4074-99bd-aa987e0e1450",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$pWOtE6UXi6fyqL+VHojD8Q$lqqboILe/5nHympsRWeFmBNKGNNb4GM0n6RfpDNBYcw",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.27.109.2",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-07T15:10:38.881Z",
+          "createdAt": "2026-05-31T15:10:38.883Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "2148d92e-f6c8-40b1-aeb0-c6e5d3b910b1",
+    "found": true,
+    "user": {
+      "id": "2148d92e-f6c8-40b1-aeb0-c6e5d3b910b1",
+      "email": "amosnabasa256@gmail.com",
+      "name": "Nabasa Me",
+      "phoneNumber": "+256703293471",
+      "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIFco2SRXLGIfIgYG4B6HQSWDu3Q1djtRMvNTeIoS4BvwhabA=s96-c",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": "2026-05-29T11:01:22.740Z",
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-29T11:00:23.517Z",
+      "updatedAt": "2026-05-29T11:01:22.741Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "c144ea25-f4e5-4692-8c01-6722ff69379a",
+      "sessions": [
+        {
+          "id": "eb7b7de3-39bc-488c-ab9c-564c33999523",
+          "userId": "2148d92e-f6c8-40b1-aeb0-c6e5d3b910b1",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$WNmduTpCHqArPdK8kLAyFg$JeGL/BVDQ96J09bIbkHL9Ir/S/FzpFuPIIk2IVxH2Sk",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.28.174.131",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-05T11:00:25.419Z",
+          "createdAt": "2026-05-29T11:00:25.420Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "7779fe71-5f29-41dc-a122-e34e9e441af1",
+    "found": true,
+    "user": {
+      "id": "7779fe71-5f29-41dc-a122-e34e9e441af1",
+      "email": "amosnabasa256@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": "+256784270769",
+      "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIFco2SRXLGIfIgYG4B6HQSWDu3Q1djtRMvNTeIoS4BvwhabA=s96-c",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": "2026-05-31T06:28:56.114Z",
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-31T06:28:27.863Z",
+      "updatedAt": "2026-05-31T06:28:56.115Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "81899a90-3327-4f6a-aaa2-e96595b38fd8",
+      "sessions": [
+        {
+          "id": "87f012ef-5382-46ba-9bda-425989ef541e",
+          "userId": "7779fe71-5f29-41dc-a122-e34e9e441af1",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$kuF0NzcYEC3xSZw59gTToA$CqgtJUXK0RGKtBduq4cB9jQUN2sBkAEGQ382+82P/yk",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.27.88.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-07T06:28:29.611Z",
+          "createdAt": "2026-05-31T06:28:29.613Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": [
+        {
+          "clientId": "14fd8e0d-6900-4e21-a150-e6dfdbf3270a",
+          "clientSecretHash": "$argon2id$v=19$m=65536,t=3,p=4$/g7/pJuKOpHLRJPJX4+/vA$fQF3ZY3IFM/bOqDy5f/Kx4iZ6GNA1PwTzEG4/oquDuA",
+          "isPublic": false,
+          "redirectUris": [
+            "http://localhost:5173/auth/callback"
+          ],
+          "scopes": [],
+          "name": "VaultKit",
+          "tenantId": "5befaeea-7538-4e12-8fbc-0a5bb31eb044",
+          "ownerId": "7779fe71-5f29-41dc-a122-e34e9e441af1",
+          "createdAt": "2026-05-31T06:32:48.101Z"
+        }
+      ]
+    }
+  },
+  {
+    "id": "35e812f3-a309-45e2-bd52-e3d878143c7f",
+    "found": true,
+    "user": {
+      "id": "35e812f3-a309-45e2-bd52-e3d878143c7f",
+      "email": "amosnabasa256@gmail.com",
+      "name": "bn",
+      "phoneNumber": "+9875567666",
+      "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIFco2SRXLGIfIgYG4B6HQSWDu3Q1djtRMvNTeIoS4BvwhabA=s96-c",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": "2026-05-31T11:32:05.121Z",
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-31T11:31:46.654Z",
+      "updatedAt": "2026-05-31T11:32:05.122Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "a7d6d927-8ceb-4323-930b-05d926b779ef",
+      "sessions": [
+        {
+          "id": "f58800cb-77a3-4120-bf34-145c75b03542",
+          "userId": "35e812f3-a309-45e2-bd52-e3d878143c7f",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$qvV5/tIYWkg/yh23aMIDCw$1x1aX8E2vSN+EXi0jfKdXFNGi0XEoTQtNMGreEI000M",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.27.88.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-07T11:31:48.500Z",
+          "createdAt": "2026-05-31T11:31:48.501Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": [
+        {
+          "clientId": "7e355fa0-1f9d-43c4-b223-78ea2361cb12",
+          "clientSecretHash": "$argon2id$v=19$m=65536,t=3,p=4$24CutIQ1WDfNVYZQksddTw$c6UOBnoc8c484PsvVqBLtOjrjNVF8OUD9VJjpLLjngo",
+          "isPublic": false,
+          "redirectUris": [
+            "https://gfd"
+          ],
+          "scopes": [],
+          "name": "g",
+          "tenantId": "fad9d6f0-d268-4241-b79e-0c2e44271b42",
+          "ownerId": "35e812f3-a309-45e2-bd52-e3d878143c7f",
+          "createdAt": "2026-05-31T11:33:53.891Z"
+        }
+      ]
+    }
+  },
+  {
+    "id": "22f9b931-887f-4368-abb5-8ea48df5aeea",
+    "found": true,
+    "user": {
+      "id": "22f9b931-887f-4368-abb5-8ea48df5aeea",
+      "email": "amosnabasa256@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": null,
+      "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIFco2SRXLGIfIgYG4B6HQSWDu3Q1djtRMvNTeIoS4BvwhabA=s96-c",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": null,
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-31T13:50:16.753Z",
+      "updatedAt": "2026-05-31T13:50:16.753Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "792b2c08-bdbd-435d-8090-d0f6353a7bf4",
+      "sessions": [
+        {
+          "id": "8c419c8a-b63f-4772-be80-cb97bff5cd70",
+          "userId": "22f9b931-887f-4368-abb5-8ea48df5aeea",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$IdNZf59LmzSB35CuXiXpmQ$9CNezTU9RT+o1745JhlPRThOpUGxOVzE+/1VCupQI9g",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.27.109.2",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-07T13:50:18.562Z",
+          "createdAt": "2026-05-31T13:50:18.563Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "67b5d302-74ee-4df1-8136-56f53092cbfb",
+    "found": true,
+    "user": {
+      "id": "67b5d302-74ee-4df1-8136-56f53092cbfb",
+      "email": "amosnabasa256@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": null,
+      "profilePictureUrl": "https://lh3.googleusercontent.com/a/ACg8ocIFco2SRXLGIfIgYG4B6HQSWDu3Q1djtRMvNTeIoS4BvwhabA=s96-c",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": null,
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-31T14:03:23.016Z",
+      "updatedAt": "2026-05-31T14:03:23.016Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "6f7d389f-f8c5-48a7-8b35-75cff943830c",
+      "sessions": [
+        {
+          "id": "3c84a0a7-9f52-46c3-9d0a-5997c7705846",
+          "userId": "67b5d302-74ee-4df1-8136-56f53092cbfb",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$JuoIiMjma2p6srVeSibAaA$21wcG5qC4SA8b8ez9pv65kGFYm8cIKz9Nl8txB9dGIw",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.27.155.5",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-07T14:03:24.955Z",
+          "createdAt": "2026-05-31T14:03:24.956Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+    "found": true,
+    "user": {
+      "id": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+      "email": "amosnabasa4@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": "+256703293471",
+      "profilePictureUrl": "https://avatars.githubusercontent.com/u/137410026?v=4",
+      "passwordHash": "$argon2id$v=19$m=65536,t=3,p=4$3zFk2HxURET8NbgNI9dBEA$6g+5E/6ctwOOq4mZE6Ek5N1dstirbrNxHtGQ6p555uY",
+      "emailVerified": true,
+      "tosAcceptedAt": "2026-05-02T05:19:55.811Z",
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-03-20T17:03:24.047Z",
+      "updatedAt": "2026-05-02T17:09:05.588Z",
+      "roles": [
+        "ADMIN",
+        "USER"
+      ],
+      "tenantId": null,
+      "sessions": [
+        {
+          "id": "569a3188-d55d-4e2c-97e7-03d40d62461d",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$WAiUz6N1GwY15Vh3fsFeVg$VBFQmhAl296cz+p0eWgywE8Kc325Yk+b0flUXwQkfbs",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+          "ipAddress": "127.0.0.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-05-10T10:40:43.090Z",
+          "createdAt": "2026-05-03T10:40:43.103Z"
+        },
+        {
+          "id": "7f8b0c5e-d061-4a3d-a07b-cfc29b33c6bd",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$6Upzfx4p92uzqI6Yw7Gtdg$y61as0vbfGZyQUkjnTC0q56TztcZO/HMYH0X/9oYD9Q",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+          "ipAddress": "127.0.0.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-05-10T10:40:45.175Z",
+          "createdAt": "2026-05-03T10:40:45.179Z"
+        },
+        {
+          "id": "0069cd43-9726-4549-b9d9-7398db40012d",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$DmmYKqf9YiDppc1r3BYaEA$PRTLGlrTrs5Vq6cGww5gTdQGW7yF/VEn/urQMw93NqM",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+          "ipAddress": "127.0.0.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-05-09T21:07:23.144Z",
+          "createdAt": "2026-05-02T21:07:23.153Z"
+        },
+        {
+          "id": "96379a4c-0188-422b-8fb6-e75c0febad1a",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$qy/8rbUxIAbXSA/ZbLvc+A$fi3d62bi5pDCUvbUJOW9Xk/07MbzBpnDGklW3HOe3hA",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+          "ipAddress": "127.0.0.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-05-10T10:40:43.434Z",
+          "createdAt": "2026-05-03T10:40:43.439Z"
+        },
+        {
+          "id": "55503015-6d1a-4cb2-a69b-0f8744892518",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$or2XJBLykeLq42Ax9nF0cA$XfRQ5IUIFtObYDgDdJ1N7hkblAr01f6ahWA0iUy8AvI",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+          "ipAddress": "127.0.0.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-05-10T10:41:12.454Z",
+          "createdAt": "2026-05-03T10:41:12.458Z"
+        },
+        {
+          "id": "7d8dfd3c-1d7a-496f-a2d1-aa4aa5418061",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$lyuktm65ihF9aE8CvPm8YQ$ezLqqJ1VTlMSqL6FJXoHr2y+e9B40EaKxvSS78gOcTE",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+          "ipAddress": "127.0.0.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-05-10T10:24:34.362Z",
+          "createdAt": "2026-05-03T10:24:34.368Z"
+        }
+      ],
+      "authProviders": [
+        {
+          "id": "7c8ca2d7-7c40-4671-9fb5-7984da7f1169",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "provider": "github",
+          "providerId": "137410026",
+          "providerEmail": "amosnabasa4@gmail.com",
+          "createdAt": "2026-03-20T17:03:25.077Z"
+        },
+        {
+          "id": "74371071-be6d-4412-b427-b6a1349ca36f",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "provider": "google",
+          "providerId": "108589481735558725148",
+          "providerEmail": "amosnabasa4@gmail.com",
+          "createdAt": "2026-03-21T16:59:25.415Z"
+        }
+      ],
+      "mfaMethods": [
+        {
+          "id": "273095a4-1d84-427d-ae0a-68b90f47b32b",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "type": "totp",
+          "secret": "NG63O76KEWQHI344TH4U5IOGPIW6XM5B",
+          "enabled": true,
+          "createdAt": "2026-05-02T18:17:40.163Z"
+        },
+        {
+          "id": "b0fc353d-e8a8-4574-85c6-1b892ff43503",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "type": "totp",
+          "secret": "WQCR5ZRDYBA2JHM5FVWCGETF5OSGNYYK",
+          "enabled": false,
+          "createdAt": "2026-05-02T18:17:42.094Z"
+        }
+      ],
+      "auditLogs": [
+        {
+          "id": "24799a74-7b05-4533-8af7-c9f825b9658e",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "action": "OTHER_SESSIONS_REVOKED",
+          "ipAddress": null,
+          "deviceInfo": null,
+          "status": "SUCCESS",
+          "details": "{\"count\":17}",
+          "createdAt": "2026-05-02T05:45:37.774Z"
+        },
+        {
+          "id": "618fa657-fde7-4def-8444-14d3c8f4966b",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "action": "SESSION_REVOKED",
+          "ipAddress": null,
+          "deviceInfo": null,
+          "status": "SUCCESS",
+          "details": "{\"sessionId\":\"1ed0a2a6-9ef7-49ae-9855-db3d1064f8f2\",\"isCurrent\":false}",
+          "createdAt": "2026-05-02T16:56:21.074Z"
+        },
+        {
+          "id": "ce483543-6085-4cae-9e22-ef1ac6710f35",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "action": "PASSWORD_SET",
+          "ipAddress": "127.0.0.1",
+          "deviceInfo": null,
+          "status": "SUCCESS",
+          "details": null,
+          "createdAt": "2026-05-02T17:09:09.201Z"
+        },
+        {
+          "id": "36a59b5c-1f4a-480c-a549-6db1c606f652",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "action": "OTHER_SESSIONS_REVOKED",
+          "ipAddress": null,
+          "deviceInfo": null,
+          "status": "SUCCESS",
+          "details": "{\"count\":4}",
+          "createdAt": "2026-05-02T17:37:31.913Z"
+        },
+        {
+          "id": "88b3a9d7-5527-4719-b156-e23567969bd2",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "action": "OTHER_SESSIONS_REVOKED",
+          "ipAddress": null,
+          "deviceInfo": null,
+          "status": "SUCCESS",
+          "details": "{\"count\":2}",
+          "createdAt": "2026-05-02T18:06:05.571Z"
+        },
+        {
+          "id": "6f4bd9ac-f8d2-45ac-a5a2-90519ac487af",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "action": "OTHER_SESSIONS_REVOKED",
+          "ipAddress": null,
+          "deviceInfo": null,
+          "status": "SUCCESS",
+          "details": "{\"count\":5}",
+          "createdAt": "2026-05-02T20:44:04.833Z"
+        },
+        {
+          "id": "bc5e3a3c-42a7-4579-ac0d-1b3fbeb2699a",
+          "userId": "dc93f9af-3427-4a7d-b6a5-fdc253795379",
+          "action": "LOGIN_FAILED",
+          "ipAddress": "127.0.0.1",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36",
+          "status": "FAILURE",
+          "details": null,
+          "createdAt": "2026-05-03T11:48:18.469Z"
+        }
+      ],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "f34ef1fe-b837-4a35-b186-7b93e8cfe0e6",
+    "found": true,
+    "user": {
+      "id": "f34ef1fe-b837-4a35-b186-7b93e8cfe0e6",
+      "email": "amosnabasa4@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": null,
+      "profilePictureUrl": "https://avatars.githubusercontent.com/u/137410026?v=4",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": null,
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-28T20:05:43.076Z",
+      "updatedAt": "2026-05-28T20:05:43.076Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "e7be93a7-bd11-484d-b84e-4e9010fdb42f",
+      "sessions": [
+        {
+          "id": "2a24aa36-8666-4d51-a0ce-0c19c47468d2",
+          "userId": "f34ef1fe-b837-4a35-b186-7b93e8cfe0e6",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$P4Jst5xjnsAJRSyYc4Jctg$g/oU/rGQJvo+McStF11697WYHAm81bP/nTvkA/gRIBk",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.25.225.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-04T20:05:44.712Z",
+          "createdAt": "2026-05-28T20:05:44.713Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "fb07e24d-efcf-4444-80ed-27d2b144723e",
+    "found": true,
+    "user": {
+      "id": "fb07e24d-efcf-4444-80ed-27d2b144723e",
+      "email": "amosnabasa4@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": null,
+      "profilePictureUrl": "https://avatars.githubusercontent.com/u/137410026?v=4",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": null,
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-29T10:02:55.697Z",
+      "updatedAt": "2026-05-29T10:02:55.697Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "3a3c2819-8328-4659-a2af-20891440408a",
+      "sessions": [
+        {
+          "id": "7b395764-1637-44ff-82cd-723aa9c05e38",
+          "userId": "fb07e24d-efcf-4444-80ed-27d2b144723e",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$DFrQiVcORDRrRonqZQ5uDA$cFs5lSqJu19y2WkSsaHWcOBnDMucAlxGhV8p8Yb06OA",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.25.225.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-05T10:02:57.459Z",
+          "createdAt": "2026-05-29T10:02:57.460Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "ebd5f541-fb05-40f1-bd14-58e9e789d4b7",
+    "found": true,
+    "user": {
+      "id": "ebd5f541-fb05-40f1-bd14-58e9e789d4b7",
+      "email": "amosnabasa4@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": null,
+      "profilePictureUrl": "https://avatars.githubusercontent.com/u/137410026?v=4",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": null,
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-29T10:03:26.834Z",
+      "updatedAt": "2026-05-29T10:03:26.834Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "c11f995e-a2dc-43e3-b7e6-61b48ec447ef",
+      "sessions": [
+        {
+          "id": "52f0f4e5-da8b-4c4f-ad95-cd3e3e473e44",
+          "userId": "ebd5f541-fb05-40f1-bd14-58e9e789d4b7",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$MEdIgxunfMLW4cMJKEURWA$ViNTL5lqMuWzkjthYXFw109kTGifarGz84ku4Gcv7nc",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.27.144.1",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-05T10:03:28.657Z",
+          "createdAt": "2026-05-29T10:03:28.658Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  },
+  {
+    "id": "f94497e3-c392-405c-979c-f318349e0645",
+    "found": true,
+    "user": {
+      "id": "f94497e3-c392-405c-979c-f318349e0645",
+      "email": "amosnabasa4@gmail.com",
+      "name": "Nabasa Amos",
+      "phoneNumber": null,
+      "profilePictureUrl": "https://avatars.githubusercontent.com/u/137410026?v=4",
+      "passwordHash": null,
+      "emailVerified": true,
+      "tosAcceptedAt": null,
+      "privacyAcceptedAt": null,
+      "createdAt": "2026-05-29T11:03:05.938Z",
+      "updatedAt": "2026-05-29T11:03:05.938Z",
+      "roles": [
+        "USER"
+      ],
+      "tenantId": "b1f431cf-6c60-494e-9e59-5bf3c1366b82",
+      "sessions": [
+        {
+          "id": "ae4caaa2-83f1-4097-a642-ae2079cf8f82",
+          "userId": "f94497e3-c392-405c-979c-f318349e0645",
+          "refreshTokenHash": "$argon2id$v=19$m=65536,t=3,p=4$jzL0MBXgTIUFaBSruv7vBA$ozJsyb4QzyS5YvSR6eD2fuASziT0JQqS5vJj86zfseE",
+          "deviceInfo": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+          "ipAddress": "10.28.174.131",
+          "familyId": null,
+          "riskScore": null,
+          "expiresAt": "2026-06-05T11:03:07.819Z",
+          "createdAt": "2026-05-29T11:03:07.820Z"
+        }
+      ],
+      "authProviders": [],
+      "mfaMethods": [],
+      "auditLogs": [],
+      "consents": [],
+      "entitlements": [],
+      "ownedClients": []
+    }
+  }
+]
