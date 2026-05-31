@@ -39,6 +39,7 @@ export default function CompleteProfile() {
         // Pre-fill name if it exists
         if (data.name) setName(data.name);
         if (data.phoneNumber) setPhoneNumber(data.phoneNumber);
+        if (data.tosAcceptedAt && data.privacyAcceptedAt) setTosAccepted(true);
       } catch (err) {
         console.error("Error fetching user data:", err);
         error("Failed to load profile data");
@@ -56,8 +57,13 @@ export default function CompleteProfile() {
       return;
     }
 
+    if (!phoneNumber.trim()) {
+      error("Phone number is required");
+      return;
+    }
+
     if (!tosAccepted) {
-      error("You must accept the Terms of Service");
+      error("You must accept the Terms of Service and Privacy Policy");
       return;
     }
 
@@ -71,7 +77,7 @@ export default function CompleteProfile() {
         },
         body: JSON.stringify({
           name: name.trim(),
-          phoneNumber: phoneNumber.trim() || undefined,
+          phoneNumber: phoneNumber.trim(),
           tosAccepted: true,
         }),
       });
@@ -144,7 +150,7 @@ export default function CompleteProfile() {
               {/* Phone Number Field */}
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
-                  Phone Number <span className="text-white/30 text-xs">(optional)</span>
+                  Phone Number <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="tel"
@@ -194,7 +200,7 @@ export default function CompleteProfile() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading || !tosAccepted || !name.trim()}
+                disabled={isLoading || !tosAccepted || !name.trim() || !phoneNumber.trim()}
                 className="w-full btn-primary py-3 mt-6 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (

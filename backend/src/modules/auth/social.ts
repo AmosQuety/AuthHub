@@ -103,12 +103,12 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
 
             await prisma.authProvider.upsert({
                 where: { provider_providerId: { provider: "google", providerId: googleId } },
-                update: { providerEmail: email },
+                update: { providerEmail: normalizedEmail },
                 create: {
                     userId: linkingUserId,
                     provider: "google",
                     providerId: googleId,
-                    providerEmail: email,
+                    providerEmail: normalizedEmail,
                 },
             });
 
@@ -148,12 +148,14 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
                 },
             });
         } else {
-            // Update existing user with profile picture if not already set
-            if (!user.profilePictureUrl && profilePicture) {
-                user = await prisma.user.update({
-                    where: { id: user.id },
-                    data: { profilePictureUrl: profilePicture }
-                });
+            // Update existing user with profile picture and name/emailVerified if missing
+            const updateData: any = {};
+            if (!user.profilePictureUrl && profilePicture) updateData.profilePictureUrl = profilePicture;
+            if (!user.name && googleName) updateData.name = googleName;
+            if (!user.emailVerified && verified_email) updateData.emailVerified = verified_email;
+
+            if (Object.keys(updateData).length > 0) {
+                user = await prisma.user.update({ where: { id: user.id }, data: updateData });
             }
         }
 
@@ -180,8 +182,8 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        // Check if profile is complete (name + ToS acceptance)
-        const isProfileComplete = user.name && user.tosAcceptedAt;
+        // Check if profile is complete (name + phone + ToS + Privacy acceptance)
+        const isProfileComplete = Boolean(user.name && user.phoneNumber && user.tosAcceptedAt && (user as any).privacyAcceptedAt);
 
         // 4. Create Session & Tokens
         const sessionId = crypto.randomUUID();
@@ -399,12 +401,14 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
                 },
             });
         } else {
-            // Update existing user with profile picture if not already set
-            if (!user.profilePictureUrl && profilePicture) {
-                user = await prisma.user.update({
-                    where: { id: user.id },
-                    data: { profilePictureUrl: profilePicture }
-                });
+            // Update existing user with profile picture and name/emailVerified if missing
+            const updateData: any = {};
+            if (!user.profilePictureUrl && profilePicture) updateData.profilePictureUrl = profilePicture;
+            if (!user.name && githubName) updateData.name = githubName;
+            if (!user.emailVerified) updateData.emailVerified = true; // GitHub verified email source
+
+            if (Object.keys(updateData).length > 0) {
+                user = await prisma.user.update({ where: { id: user.id }, data: updateData });
             }
         }
 
@@ -432,8 +436,8 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        // Check if profile is complete (name + ToS acceptance)
-        const isProfileComplete = user.name && user.tosAcceptedAt;
+        // Check if profile is complete (name + phone + ToS + Privacy acceptance)
+        const isProfileComplete = Boolean(user.name && user.phoneNumber && user.tosAcceptedAt && (user as any).privacyAcceptedAt);
 
         // 4. Create Session
         const sessionId = crypto.randomUUID();

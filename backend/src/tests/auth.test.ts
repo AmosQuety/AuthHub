@@ -125,7 +125,7 @@ describe("POST /api/v1/auth/login", () => {
 // Google OAuth
 // ---------------------------------------------------------------------------
 describe("GET /api/v1/auth/google/callback", () => {
-  it("logs in an existing account by email and links the Google provider", async () => {
+  it("redirects an existing social user to complete profile when phone or privacy consent is missing", async () => {
     const email = testEmail();
     const googleId = `google-${Date.now()}`;
 
@@ -133,7 +133,9 @@ describe("GET /api/v1/auth/google/callback", () => {
       data: {
         email,
         name: "Google User",
+        phoneNumber: null,
         tosAcceptedAt: new Date(),
+        privacyAcceptedAt: null,
         emailVerified: true,
       },
     });
@@ -172,7 +174,7 @@ describe("GET /api/v1/auth/google/callback", () => {
       .redirects(0);
 
     expect(res.status).toBe(302);
-    expect(String(res.headers.location)).toContain("/login/success");
+    expect(String(res.headers.location)).toContain("/auth/complete-profile");
 
     const linked = await prisma.authProvider.findUnique({
       where: { provider_providerId: { provider: "google", providerId: googleId } },
@@ -180,6 +182,26 @@ describe("GET /api/v1/auth/google/callback", () => {
 
     expect(linked?.userId).toBe(user.id);
     expect(fetchMock).toHaveBeenCalled();
+
+    const accessToken = new URL(String(res.headers.location)).searchParams.get("access_token");
+    expect(accessToken).toBeTruthy();
+
+    const completeRes = await request(app)
+      .post("/api/v1/auth/complete-profile")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        name: "Google User Updated",
+        phoneNumber: "+256700000001",
+        tosAccepted: true,
+      });
+
+    expect(completeRes.status).toBe(200);
+    expect(completeRes.body.user.phoneNumber).toBe("+256700000001");
+    expect(completeRes.body.user.name).toBe("Google User Updated");
+
+    const saved = await prisma.user.findUnique({ where: { id: user.id } });
+    expect(saved?.phoneNumber).toBe("+256700000001");
+    expect(saved?.privacyAcceptedAt).toBeTruthy();
   });
 });
 

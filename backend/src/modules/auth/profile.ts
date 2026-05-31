@@ -5,7 +5,7 @@ import { hashPassword } from "../../core/crypto.js";
 
 interface CompleteProfileRequest {
   name: string;
-  phoneNumber?: string;
+  phoneNumber: string;
   tosAccepted: boolean;
 }
 
@@ -23,13 +23,18 @@ export const completeProfile = async (req: Request, res: Response, next: NextFun
       return;
     }
 
+    if (!phoneNumber || !phoneNumber.trim()) {
+      res.status(400).json({ error: "Phone number is required" });
+      return;
+    }
+
     if (!tosAccepted) {
       res.status(400).json({ error: "You must accept the Terms of Service to continue" });
       return;
     }
 
     // Validate phone number format if provided
-    if (phoneNumber && !/^\+?[1-9]\d{1,14}$/.test(phoneNumber.replace(/\D/g, ""))) {
+    if (!/^\+?[1-9]\d{1,14}$/.test(phoneNumber.replace(/\D/g, ""))) {
       res.status(400).json({ error: "Invalid phone number format" });
       return;
     }
@@ -39,8 +44,9 @@ export const completeProfile = async (req: Request, res: Response, next: NextFun
       where: { id: req.user.sub },
       data: {
         name: name.trim(),
-        phoneNumber: phoneNumber || null,
+        phoneNumber: phoneNumber.trim(),
         tosAcceptedAt: new Date(),
+        privacyAcceptedAt: new Date(),
       },
     });
 
@@ -71,6 +77,8 @@ export const completeProfile = async (req: Request, res: Response, next: NextFun
         name: user.name,
         phoneNumber: user.phoneNumber,
         profilePictureUrl: user.profilePictureUrl,
+        tosAcceptedAt: user.tosAcceptedAt,
+        privacyAcceptedAt: user.privacyAcceptedAt,
       },
     });
   } catch (error) {

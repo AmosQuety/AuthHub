@@ -24,6 +24,7 @@ model User {
   passwordHash   String?        @map("password_hash") // Optional for social login
   emailVerified  Boolean        @default(false) @map("email_verified")
   tosAcceptedAt  DateTime?      @map("tos_accepted_at")
+  privacyAcceptedAt DateTime?   @map("privacy_accepted_at")
   createdAt      DateTime       @default(now()) @map("created_at")
   updatedAt      DateTime       @updatedAt @map("updated_at")
   roles          Role[]         @default([USER])
