@@ -114,19 +114,20 @@ export default function ChangePassword() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {hasPassword && (
-                  <div>
-                    <label className="input-label">Current Password</label>
-                    <input
-                      type="password"
-                      required
-                      className="input-field"
-                      placeholder="••••••••"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                    />
-                  </div>
-                )}
+                <div>
+                  <label className="input-label">Current Password</label>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    className="input-field"
+                    placeholder={hasPassword ? "••••••••" : "Enter your old password if you have one"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                  />
+                  <p className="mt-2 text-[11px] text-white/30">
+                    Required only if this account already has a password set.
+                  </p>
+                </div>
 
                 <div>
                   <label className="input-label">New Password</label>
