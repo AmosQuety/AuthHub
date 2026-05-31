@@ -68,6 +68,8 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
         // 3. Upsert User & AuthProvider in DB
         const { id: rawGoogleId, email, verified_email, name: googleName, picture: profilePicture } = profileData;
         const googleId = String(rawGoogleId);
+        if (!email) throw new Error("No email found associated with Google account");
+        const normalizedEmail = String(email).toLowerCase();
 
         const stateStr = req.query.state as string;
         let tenantId: string | null = null;
@@ -114,9 +116,12 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        // AUTO-TENANT: If no tenantId is resolved, create a new one for this user
-        if (!tenantId) {
-            const tenantName = `${googleName || email.split('@')[0]}'s Workspace`;
+        let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+
+        // AUTO-TENANT: If we need to create a fresh account and no tenantId is resolved,
+        // create a new one for that account.
+        if (!tenantId && !user) {
+            const tenantName = `${googleName || normalizedEmail.split('@')[0]}'s Workspace`;
             const newTenant = await prisma.tenant.create({
                 data: {
                     name: tenantName,
@@ -125,8 +130,6 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
             });
             tenantId = newTenant.id;
         }
-
-        let user = await prisma.user.findFirst({ where: { email, tenantId } });
 
         if (!user) {
             // If we are in 'login' mode, do NOT auto-create. Redirect with error.
@@ -137,7 +140,7 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
 
             user = await prisma.user.create({
                 data: {
-                    email,
+                    email: normalizedEmail,
                     emailVerified: verified_email,
                     name: googleName || null,
                     profilePictureUrl: profilePicture || null,
@@ -157,12 +160,12 @@ export const googleCallback = async (req: Request, res: Response, next: NextFunc
         // Upsert AuthProvider link
         await prisma.authProvider.upsert({
             where: { provider_providerId: { provider: "google", providerId: googleId } },
-            update: { providerEmail: email },
+            update: { providerEmail: normalizedEmail },
             create: {
                 userId: user.id,
                 provider: "google",
                 providerId: googleId,
-                providerEmail: email,
+                providerEmail: normalizedEmail,
             },
         });
 
@@ -314,6 +317,8 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
 
         if (!email) throw new Error("No email found associated with GitHub account");
 
+        const normalizedEmail = String(email).toLowerCase();
+
     const { id: rawGithubId, name: githubName, avatar_url: profilePicture } = profileData;
         const githubId = String(rawGithubId);
 
@@ -362,9 +367,12 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
             return;
         }
 
-        // AUTO-TENANT: If no tenantId is resolved, create a new one for this user
-        if (!tenantId) {
-            const tenantName = `${githubName || email.split('@')[0]}'s Workspace`;
+        let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+
+        // AUTO-TENANT: If we need to create a fresh account and no tenantId is resolved,
+        // create a new one for that account.
+        if (!tenantId && !user) {
+            const tenantName = `${githubName || normalizedEmail.split('@')[0]}'s Workspace`;
             const newTenant = await prisma.tenant.create({
                 data: {
                     name: tenantName,
@@ -373,8 +381,6 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
             });
             tenantId = newTenant.id;
         }
-
-        let user = await prisma.user.findFirst({ where: { email, tenantId: tenantId! } });
 
         if (!user) {
             // If we are in 'login' mode, do NOT auto-create. Redirect with error.
@@ -385,7 +391,7 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
 
             user = await prisma.user.create({
                 data: {
-                    email,
+                    email: normalizedEmail,
                     emailVerified: true, // GitHub verified it
                     name: githubName || null,
                     profilePictureUrl: profilePicture || null,
@@ -404,12 +410,12 @@ export const githubCallback = async (req: Request, res: Response, next: NextFunc
 
         await prisma.authProvider.upsert({
             where: { provider_providerId: { provider: "github", providerId: githubId } },
-            update: { providerEmail: email },
+            update: { providerEmail: normalizedEmail },
             create: {
                 userId: user.id,
                 provider: "github",
                 providerId: githubId,
-                providerEmail: email,
+                providerEmail: normalizedEmail,
             },
         });
 
