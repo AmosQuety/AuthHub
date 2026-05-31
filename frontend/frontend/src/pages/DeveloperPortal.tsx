@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
-import { BookOpen, Globe, Plus } from 'lucide-react';
+import { BookOpen, Globe, Plus, AlertTriangle } from 'lucide-react';
 import { DeveloperStats } from './developer/DeveloperStats';
 import { AppList } from './developer/AppList';
 import { CreatedAppBanner } from './developer/CreatedAppBanner';
@@ -31,6 +31,7 @@ export default function DeveloperPortal() {
 
   const [revealedSecrets, setRevealedSecrets] = useState<Record<string, string>>({});
   const [copyStatus, setCopyStatus] = useState<Record<string, boolean>>({});
+  const [createError, setCreateError] = useState('');
 
   useEffect(() => {
     loadData();
@@ -54,6 +55,7 @@ export default function DeveloperPortal() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreateError('');
     try {
       const uris = newClientUris.split(',').map(u => u.trim()).filter(Boolean);
       const data = await api.post('/developer/clients', {
@@ -72,7 +74,7 @@ export default function DeveloperPortal() {
       setNewClientUris('');
       setShowCreateModal(false);
     } catch (err) {
-      alert('Failed to create client. Make sure the app name is unique.');
+      setCreateError(err instanceof Error ? err.message : 'Failed to create client');
     }
   };
 
@@ -209,6 +211,7 @@ export default function DeveloperPortal() {
           isConfidential={isConfidential}
           setIsConfidential={setIsConfidential}
           handleCreate={handleCreate}
+          createError={createError}
         />
       )}
 

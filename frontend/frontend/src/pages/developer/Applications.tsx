@@ -29,6 +29,7 @@ export default function Applications() {
 
   const [revealedSecrets, setRevealedSecrets] = useState<Record<string, string>>({});
   const [copyStatus, setCopyStatus] = useState<Record<string, boolean>>({});
+  const [createError, setCreateError] = useState('');
 
   useEffect(() => {
     loadData();
@@ -48,6 +49,7 @@ export default function Applications() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreateError('');
     try {
       const uris = newClientUris.split(',').map(u => u.trim()).filter(Boolean);
       const data = await api.post('/developer/clients', {
@@ -66,7 +68,7 @@ export default function Applications() {
       setNewClientUris('');
       setShowCreateModal(false);
     } catch (err) {
-      alert('Failed to create client. Make sure the app name is unique.');
+      setCreateError(err instanceof Error ? err.message : 'Failed to create client');
     }
   };
 
@@ -195,6 +197,7 @@ export default function Applications() {
           isConfidential={isConfidential}
           setIsConfidential={setIsConfidential}
           handleCreate={handleCreate}
+          createError={createError}
         />
       )}
 
