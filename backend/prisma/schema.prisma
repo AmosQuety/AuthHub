@@ -17,7 +17,7 @@ enum Role {
 
 model User {
   id             String         @id @default(uuid()) @db.Uuid
-  email          String
+  email          String         @unique
   name           String?        @map("name")
   phoneNumber    String?        @map("phone_number")
   profilePictureUrl String?     @map("profile_picture_url")
@@ -37,8 +37,6 @@ model User {
   entitlements   Entitlement[]
   tenant         Tenant?        @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
-  // Email unique per tenant — Alice can have separate accounts across different apps
-  @@unique([email, tenantId])
   @@map("users")
 }
 

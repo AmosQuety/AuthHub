@@ -36,9 +36,9 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       tenantId = tenant.id;
     }
 
-    // Check for existing user scoped to this tenant
-    const existingUser = await prisma.user.findFirst({
-      where: { email, tenantId },
+    // Email is globally unique, so any existing account must be reused.
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
     });
 
     if (existingUser) {
@@ -114,8 +114,8 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
       return;
     }
 
-    const user = await prisma.user.findFirst({
-      where: tenantId ? { email, tenantId } : { email },
+    const user = await prisma.user.findUnique({
+      where: { email },
     });
 
     if (!user || !user.passwordHash) {
@@ -745,7 +745,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
       if (tenant) tenantId = tenant.id;
     }
 
-    const user = await prisma.user.findFirst({ where: { email, tenantId } });
+    const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       res.json({ message: "If that email exists, a reset link has been sent." });
       return;

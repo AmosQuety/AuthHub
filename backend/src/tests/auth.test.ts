@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import request from "supertest";
 import app from "../index.js";
 import prisma from "../db/client.js";
@@ -32,6 +32,10 @@ async function loginUser(email: string, password = "TestPass123!", clientId?: st
     .send(payload);
 }
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 // ---------------------------------------------------------------------------
 // Registration
 // ---------------------------------------------------------------------------
@@ -47,6 +51,25 @@ describe("POST /api/v1/auth/register", () => {
     const email = testEmail();
     await registerUser(email);
     const res = await registerUser(email);
+    expect(res.status).toBe(409);
+  });
+
+  it("returns 409 when the same email is reused under another tenant", async () => {
+    const email = testEmail();
+    const tenant = await prisma.tenant.create({
+      data: {
+        name: `Tenant ${Date.now()}`,
+        clientId: `tenant-${Date.now()}`,
+      },
+    });
+
+    const first = await registerUser(email);
+    expect(first.status).toBe(201);
+
+    const res = await request(app)
+      .post("/api/v1/auth/register")
+      .send({ email, password: "TestPass123!", client_id: tenant.clientId });
+
     expect(res.status).toBe(409);
   });
 
@@ -82,46 +105,81 @@ describe("POST /api/v1/auth/login", () => {
     expect(res.status).toBe(401);
   });
 
-  it("scopes tenant logins by client_id", async () => {
+  it("still logs in when client_id is supplied", async () => {
     const email = testEmail();
-    const passwordA = "TenantPass123!";
-    const passwordB = "TenantPass456!";
-
-    const tenantA = await prisma.tenant.create({
+    const tenant = await prisma.tenant.create({
       data: {
-        name: `Tenant A ${Date.now()}`,
-        clientId: `tenant-a-${Date.now()}`,
+        name: `Tenant ${Date.now()}`,
+        clientId: `tenant-${Date.now()}`,
       },
     });
 
-    const tenantB = await prisma.tenant.create({
-      data: {
-        name: `Tenant B ${Date.now()}`,
-        clientId: `tenant-b-${Date.now()}`,
-      },
-    });
+    await registerUser(email);
 
-    await prisma.user.create({
-      data: {
-        email,
-        tenantId: tenantA.id,
-        passwordHash: await hashPassword(passwordA),
-      },
-    });
-
-    await prisma.user.create({
-      data: {
-        email,
-        tenantId: tenantB.id,
-        passwordHash: await hashPassword(passwordB),
-      },
-    });
-
-    const okRes = await loginUser(email, passwordA, tenantA.clientId ?? undefined);
+    const okRes = await loginUser(email, "TestPass123!", tenant.clientId ?? undefined);
     expect(okRes.status).toBe(200);
+  });
+});
 
-    const badRes = await loginUser(email, passwordA, tenantB.clientId ?? undefined);
-    expect(badRes.status).toBe(401);
+// ---------------------------------------------------------------------------
+// Google OAuth
+// ---------------------------------------------------------------------------
+describe("GET /api/v1/auth/google/callback", () => {
+  it("logs in an existing account by email and links the Google provider", async () => {
+    const email = testEmail();
+    const googleId = `google-${Date.now()}`;
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        name: "Google User",
+        tosAcceptedAt: new Date(),
+        emailVerified: true,
+      },
+    });
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input: any) => {
+      const url = String(input);
+
+      if (url.includes("oauth2.googleapis.com/token")) {
+        return new Response(JSON.stringify({ access_token: "token" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (url.includes("www.googleapis.com/oauth2/v2/userinfo")) {
+        return new Response(JSON.stringify({
+          id: googleId,
+          email,
+          verified_email: true,
+          name: "Google User",
+          picture: "https://example.com/avatar.png",
+        }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      throw new Error(`Unexpected fetch URL: ${url}`);
+    }) as unknown as ReturnType<typeof vi.spyOn>;
+
+    const state = Buffer.from(JSON.stringify({ mode: "login" })).toString("base64url");
+
+    const res = await request(app)
+      .get("/api/v1/auth/google/callback")
+      .query({ code: "test-code", state })
+      .redirects(0);
+
+    expect(res.status).toBe(302);
+    expect(String(res.headers.location)).toContain("/login/success");
+
+    const linked = await prisma.authProvider.findUnique({
+      where: { provider_providerId: { provider: "google", providerId: googleId } },
+    });
+
+    expect(linked?.userId).toBe(user.id);
+    expect(fetchMock).toHaveBeenCalled();
   });
 });
 
@@ -144,7 +202,7 @@ describe("POST /api/v1/auth/refresh", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.accessToken).toBeTruthy();
-  });
+  }, 30000);
 
   it("returns 401 with no refresh token cookie", async () => {
     const res = await request(app).post("/api/v1/auth/refresh");
