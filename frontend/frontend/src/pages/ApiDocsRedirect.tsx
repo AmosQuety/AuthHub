@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const FALLBACK_DOCS_URL = 'https://authhub-npym.onrender.com/api/v1/docs';
+const FALLBACK_DOCS_URL = 'https://amosquety.github.io/AuthHub/';
 
 function resolveDocsUrl() {
   const configured = import.meta.env.VITE_API_DOCS_URL;
