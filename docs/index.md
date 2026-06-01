@@ -1,30 +1,32 @@
 # AuthHub Developer Portal
 
-AuthHub is a production-grade authentication platform for users, applications, and AI agents. This portal is organized around the actual runtime behavior of the system, with separate sections for getting started, tutorials, API reference, security, and operations.
+AuthHub is a production-grade authentication platform for users, applications, operators, and AI coding agents.
 
-Start here
+Use this portal to integrate OAuth 2.0, OpenID Connect, MFA, session management, billing, webhooks, security controls, and observability without needing direct access to the source code.
 
+## Start here
+
+- [Introduction](introduction.md)
+- [Quick Start](quickstart.md)
 - [Getting Started](getting-started/index.md)
 - [API Reference](api-reference/index.md)
 - [Tutorials](tutorials/index.md)
 - [Security](security/index.md)
 - [Operations](operations.md)
+- [AI Agents](AI_AGENTS.md)
 
-What you can build
+## Core platform areas
 
-- Email/password authentication
 - OAuth 2.0 Authorization Code with PKCE
 - OpenID Connect discovery, JWKS, ID tokens, and UserInfo
-- Social login with Google and GitHub
-- Tenant-aware and admin-managed authentication workflows
-- Billing and entitlement sync through Stripe
-- Webhook delivery and management for tenant events
+- Email/password authentication
+- MFA and risk-based authentication
+- Session refresh, revocation, and introspection
+- Tenant-aware client and user administration
+- Stripe billing and entitlement sync
+- Signed webhook delivery
+- Observability and audit workflows
 
-AI agent friendly
+## AI-agent friendly documentation
 
-The docs include copy-paste examples, concrete request/response payloads, and implementation notes so automated agents can integrate without inspecting source code.
-
-Search-friendly structure
-
-The portal is split into short, focused pages with one main topic per file so users and agents can jump directly to the behavior they need.
-
+The documentation is organized into short, focused pages with concrete request/response examples and implementation notes. AI coding agents should begin with [AI Agents](AI_AGENTS.md), [AI onboarding](ai/onboarding.md), and [AI quick reference](ai/quick-reference.md).

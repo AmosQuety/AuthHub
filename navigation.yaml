@@ -2,15 +2,17 @@
   page: docs/index.md
 - label: Getting Started
   page: docs/getting-started/index.md
-- label: Tutorials
-  page: docs/tutorials/index.md
+- label: Authentication
+  page: docs/api-reference/auth/index.md
 - label: API Reference
   page: docs/api-reference/index.md
-- label: Security
-  page: docs/security/index.md
+- label: Guides
+  page: docs/tutorials/index.md
 - label: Operations
   page: docs/operations.md
-- label: FAQ
-  page: docs/faq.md
-- label: Glossary
-  page: docs/glossary.md
+- label: Security
+  page: docs/security/index.md
+- label: AI Agents
+  page: docs/ai/index.md
+- label: Reference
+  page: docs/navigation.md

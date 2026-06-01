@@ -1,0 +1,76 @@
+name: Documentation Portal CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "redocly.yaml"
+      - "navigation.yaml"
+      - "sidebar.yaml"
+      - "sitemap.xml"
+      - "robots.txt"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Audit Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js v20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Redocly CLI
+        run: npm install --global @redocly/cli@latest
+
+      - name: Validate Redocly Configuration & Schemas
+        run: redocly lint authhub
+
+      - name: Compile GitHub Pages Artifacts
+        run: |
+          mkdir -p dist
+          cp -R docs/. dist/
+          cp sitemap.xml dist/sitemap.xml
+          cp robots.txt dist/robots.txt
+          cp .nojekyll dist/.nojekyll
+
+      - name: Verify Internal Links Integrity
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --no-progress --accept 200,206,429 "dist/**/*.html" "dist/**/*.md"
+          fail: true
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages Platform
+        id: deployment
+        uses: actions/deploy-pages@v4

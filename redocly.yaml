@@ -1,11 +1,257 @@
+# AuthHub Developer Portal Redocly Configuration
+# Production-ready configuration for GitHub Pages hosting
+
 extends:
   - recommended
 
 apis:
   authhub:
     root: https://authhub-npym.onrender.com/api/v1/docs/openapi.json
+    output: docs/api-reference/openapi.yaml
+    decorators:
+      info-description-override:
+        filePath: docs/api-reference/overview.md
+
+theme:
+  openapi:
+    htmlTemplate: docs/index.html
+    theme:
+      colors:
+        primary:
+          main: "#2563eb"     # Stripe-like vibrant developer blue
+        success:
+          main: "#10b981"     # Clerk-like fresh emerald
+        warning:
+          main: "#f59e0b"     # Harmony amber
+        error:
+          main: "#ef4444"       # Premium ruby red
+        text:
+          primary: "#0f172a"   # Sleek slate-900
+          secondary: "#475569" # Elegant slate-600
+        responses:
+          success:
+            color: "#10b981"
+            backgroundColor: "rgba(16, 185, 129, 0.05)"
+          error:
+            color: "#ef4444"
+            backgroundColor: "rgba(239, 68, 68, 0.05)"
+      typography:
+        fontSize: "15px"
+        lineHeight: "1.6"
+        fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        headings:
+          fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+          fontWeight: "600"
+        code:
+          fontSize: "13px"
+          fontFamily: "Fira Code, Menlo, Monaco, Consolas, 'Courier New', monospace"
+      sidebar:
+        width: "280px"
+        backgroundColor: "#f8fafc"
+        textColor: "#334155"
+        activeTextColor: "#2563eb"
+        activeBgColor: "rgba(37, 99, 235, 0.05)"
+        borderColor: "#e2e8f0"
+      rightPanel:
+        backgroundColor: "#0f172a"
+        textColor: "#cbd5e1"
+        width: "40%"
+    disableSearch: false
+    nativeScrollbars: true
+    hideDownloadButton: false
+    expandResponses: "200,201"
+    requiredPropsFirst: true
+    sortPropsAlphabetically: false
+    pathInMiddlePanel: true
+    hideHostname: false
+    showExtensions: true
+    generateCodeSamples:
+      languages:
+        - lang: curl
+        - lang: JavaScript
+        - lang: Python
+        - lang: Go
+
+seo:
+  title: AuthHub Developer Portal
+  description: Complete developer documentation for AuthHub, a high-performance OAuth 2.0 & OIDC identity platform engineered for developers, security experts, and autonomous AI agents.
+  siteUrl: https://authhub.dev
+  image: /docs/images/authhub-og.svg
+  lang: en-US
+  keywords:
+    - OAuth Provider
+    - OIDC Provider
+    - Authentication Platform
+    - Identity Platform
+    - AuthHub
+    - OAuth Server
+    - OpenID Connect
+    - Multi-tenant Identity
+    - API Authentication
+    - AI Coding Agents auth
+
+navbar:
+  items:
+    - label: Getting Started
+      page: docs/getting-started.md
+    - label: Authentication
+      page: docs/oauth/index.md
+    - label: API Reference
+      page: docs/api-reference/index.md
+    - label: Guides
+      page: docs/tutorials/index.md
+    - label: Operations
+      page: docs/operations.md
+    - label: AI Agents
+      page: docs/AI_AGENTS.md
+    - label: Reference
+      page: docs/navigation.md
+  links:
+    - label: GitHub
+      href: https://github.com/AmosQuety/AuthHub
+      position: right
+    - label: Status
+      href: https://authhub-npym.onrender.com/api/v1/health
+      position: right
+
+sidebar:
+  # Getting Started Section
+  - group: Getting Started
+    items:
+      - page: docs/introduction.md
+      - page: docs/quickstart.md
+      - page: docs/getting-started.md
+      - page: docs/getting-started/create-account.md
+      - page: docs/getting-started/create-oauth-client.md
+      - page: docs/getting-started/pkce.md
+      - page: docs/getting-started/login-and-tokens.md
+      - page: docs/architecture.md
+
+  # Authentication Section
+  - group: Authentication
+    items:
+      - page: docs/oauth/index.md
+      - page: docs/oidc/index.md
+      - page: docs/security/session-revocation.md
+      - page: docs/security/mfa-enforcement.md
+      - page: docs/tutorials/password-reset.md
+      - page: docs/tutorials/email-verification.md
+
+  # API Reference Section
+  - group: API Reference
+    items:
+      - page: docs/api-reference/index.md
+      - page: docs/api-reference/auth/index.md
+      - page: docs/api-reference/oauth.md
+      - page: docs/api-reference/oidc.md
+      - page: docs/api-reference/developer/index.md
+      - page: docs/api-reference/admin/index.md
+      - page: docs/billing/index.md
+      - page: docs/webhooks/index.md
+
+  # Guides Section
+  - group: Guides
+    items:
+      - page: docs/tutorials/index.md
+      - page: docs/sdk-guides/javascript.md
+      - page: docs/sdk-guides/react.md
+      - page: docs/sdk-guides/nextjs.md
+      - page: docs/sdk-guides/express.md
+      - page: docs/sdk-guides/python.md
+      - page: docs/sdk-guides/react-native.md
+      - page: docs/migration-guides/from_auth0.md
+      - page: docs/migration-guides/from_clerk.md
+      - page: docs/migration-guides/from_firebase.md
+      - page: docs/migration-guides/from_keycloak.md
+      - page: docs/migration-guides/from_supabase.md
+
+  # Operations Section
+  - group: Operations
+    items:
+      - page: docs/operations.md
+      - page: docs/deployment/github-pages.md
+      - page: docs/tutorials/observability-dashboard.md
+      - page: docs/security/index.md
+      - page: docs/security/root-api-keys.md
+      - page: docs/troubleshooting/common-errors.md
+
+  # AI Agents Section
+  - group: AI Agents
+    items:
+      - page: docs/AI_AGENTS.md
+      - page: docs/ai/index.md
+      - page: docs/ai/onboarding.md
+      - page: docs/ai/integration.md
+      - page: docs/ai/quick-reference.md
+
+  # Reference Section
+  - group: Reference
+    items:
+      - page: docs/navigation.md
+      - page: docs/search.md
+      - page: docs/faq.md
+      - page: docs/glossary.md
+      - page: docs/openapi-reconciliation.md
+      - page: docs/remediation-report.md
+
+footer:
+  copyrightText: Copyright © 2026 AuthHub. All rights reserved.
+  items:
+    - group: Documentation
+      items:
+        - label: Getting Started
+          page: docs/getting-started.md
+        - label: Tutorials
+          page: docs/tutorials/index.md
+        - label: API Reference
+          page: docs/api-reference/index.md
+        - label: Search Index
+          page: docs/search.md
+    - group: Platform
+      items:
+        - label: Security
+          page: docs/security/index.md
+        - label: Operations
+          page: docs/operations.md
+        - label: Architecture
+          page: docs/architecture.md
+        - label: AI Optimization
+          page: docs/AI_AGENTS.md
+    - group: Reference
+      items:
+        - label: FAQ
+          page: docs/faq.md
+        - label: Glossary
+          page: docs/glossary.md
+        - label: OpenAPI Reconciliation
+          page: docs/openapi-reconciliation.md
+
+versions:
+  - version: v1
+    label: v1 (Latest)
+    folder: docs
+    default: true
+
+search:
+  engine: flexsearch
+  index:
+    - docs/**/*.md
+    - docs/api-reference/**/*.md
+  boost:
+    - pattern: docs/getting-started/**
+      value: 2
+    - pattern: docs/api-reference/**
+      value: 2
+    - pattern: docs/AI_AGENTS.md
+      value: 3
+
+redirects:
+  /: /docs/
+  /api: /docs/api-reference/
+  /ai: /docs/AI_AGENTS.html
 
 rules:
   no-unused-components: warn
-  operation-operationId-unique: warn
-
+  operation-operationId-unique: error
+  operation-summary: warn
+  security-defined: error
