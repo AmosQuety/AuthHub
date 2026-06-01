@@ -1,0 +1,11 @@
+extends:
+  - recommended
+
+apis:
+  authhub:
+    root: https://authhub-npym.onrender.com/api/v1/docs/openapi.json
+
+rules:
+  no-unused-components: warn
+  operation-operationId-unique: warn
+

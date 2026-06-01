@@ -1,0 +1,16 @@
+- label: Home
+  page: docs/index.md
+- label: Getting Started
+  page: docs/getting-started/index.md
+- label: Tutorials
+  page: docs/tutorials/index.md
+- label: API Reference
+  page: docs/api-reference/index.md
+- label: Security
+  page: docs/security/index.md
+- label: Operations
+  page: docs/operations.md
+- label: FAQ
+  page: docs/faq.md
+- label: Glossary
+  page: docs/glossary.md
