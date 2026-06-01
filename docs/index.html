@@ -35,12 +35,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/authhub.css">
 
-  <!-- Premium Overrides & Animations -->
+  <!-- Marked & Prism CDN Resources -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-yaml.min.js"></script>
+
+  <!-- SPA Custom Layout Styles -->
   <style>
     :root {
       --font-display: 'Outfit', sans-serif;
       --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      --sidebar-w: 280px;
+      --toc-w: 240px;
     }
     
     body {
@@ -51,7 +63,6 @@
       font-family: var(--font-display);
     }
 
-    /* Elegant Hero Upgrades */
     .hero {
       position: relative;
       overflow: hidden;
@@ -68,7 +79,6 @@
       z-index: -1;
     }
 
-    /* Code Block styling in Hero Panel */
     .code-snippet {
       background: var(--code);
       color: var(--code-text);
@@ -86,7 +96,6 @@
     .code-string { color: #34d399; }
     .code-func { color: #60a5fa; }
 
-    /* Theme Switcher Toggle */
     .theme-toggle-btn {
       background: transparent;
       border: 1px solid var(--border);
@@ -105,7 +114,6 @@
       background: var(--surface-strong);
     }
 
-    /* Cards Micro-animations */
     .feature-grid a, .journey-grid a {
       transition: transform var(--transition-smooth), border-color var(--transition-fast), box-shadow var(--transition-smooth);
       position: relative;
@@ -117,7 +125,6 @@
       box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
     }
 
-    /* Responsive Mobile Menu Button */
     .mobile-menu-toggle {
       display: none;
       background: transparent;
@@ -143,6 +150,309 @@
         display: flex;
       }
     }
+
+    /* ==========================================================================
+       SPLIT-PANE DOCUMENTATION VIEWER LAYOUT
+       ========================================================================== */
+    
+    #docs-view {
+      display: none;
+      min-height: calc(100vh - 68px);
+      background: var(--bg);
+    }
+
+    .docs-layout {
+      display: flex;
+      width: 100%;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* Left Sidebar */
+    .docs-sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 68px;
+      height: calc(100vh - 68px);
+      overflow-y: auto;
+      padding: 1.5rem 1rem;
+      flex-shrink: 0;
+    }
+
+    .sidebar-search {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+    }
+    .sidebar-search:focus {
+      outline: none;
+      border-color: var(--brand);
+    }
+
+    .sidebar-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .sidebar-group-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+      padding-left: 0.5rem;
+    }
+
+    .sidebar-item {
+      display: block;
+      padding: 0.45rem 0.75rem;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 6px;
+      margin-bottom: 0.125rem;
+      transition: var(--transition-fast);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-item:hover {
+      background: var(--surface-strong);
+      color: var(--brand);
+    }
+
+    .sidebar-item.active {
+      background: color-mix(in srgb, var(--brand) 8%, transparent);
+      color: var(--brand);
+      font-weight: 700;
+    }
+
+    /* Center Content Container */
+    .docs-content-wrapper {
+      flex: 1;
+      padding: 2.5rem clamp(1.5rem, 4vw, 3.5rem);
+      max-width: 900px;
+      overflow-x: hidden;
+    }
+
+    .docs-markdown-body {
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    .docs-markdown-body h1 {
+      font-size: 2.5rem;
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      font-weight: 800;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    .docs-markdown-body h2 {
+      font-size: 1.75rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.3rem;
+    }
+
+    .docs-markdown-body h3 {
+      font-size: 1.35rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+    }
+
+    .docs-markdown-body p {
+      margin-top: 0;
+      margin-bottom: 1.25rem;
+    }
+
+    .docs-markdown-body a {
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .docs-markdown-body a:hover {
+      text-decoration: underline;
+    }
+
+    .docs-markdown-body code {
+      font-family: 'Fira Code', monospace;
+      background: var(--surface-strong);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      color: var(--brand);
+    }
+
+    .docs-markdown-body pre {
+      background: var(--code);
+      padding: 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .docs-markdown-body pre code {
+      background: transparent;
+      padding: 0;
+      color: var(--code-text);
+      font-size: 0.85rem;
+    }
+
+    .docs-markdown-body blockquote {
+      margin: 1.5rem 0;
+      padding: 1rem 1.5rem;
+      border-left: 4px solid var(--brand);
+      background: var(--surface-strong);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .docs-markdown-body blockquote p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* GitHub Alert Styles in Markdown */
+    .docs-markdown-body .alert {
+      padding: 1rem 1.25rem;
+      margin: 1.5rem 0;
+      border-left: 4px solid;
+      border-radius: 0 6px 6px 0;
+    }
+    .docs-markdown-body .alert-note {
+      background: rgba(37, 99, 235, 0.05);
+      border-color: #2563eb;
+    }
+    .docs-markdown-body .alert-important {
+      background: rgba(245, 158, 11, 0.05);
+      border-color: #f59e0b;
+    }
+    .docs-markdown-body .alert-warning {
+      background: rgba(239, 68, 68, 0.05);
+      border-color: #ef4444;
+    }
+
+    .docs-markdown-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+    }
+    .docs-markdown-body th, .docs-markdown-body td {
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .docs-markdown-body th {
+      background: var(--surface-strong);
+      font-weight: 700;
+    }
+
+    /* Right TOC Panel */
+    .docs-toc {
+      width: var(--toc-w);
+      position: sticky;
+      top: 68px;
+      height: calc(100vh - 68px);
+      overflow-y: auto;
+      padding: 2.5rem 1.5rem;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 1200px) {
+      .docs-toc {
+        display: none;
+      }
+    }
+
+    .toc-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.75rem;
+    }
+
+    .toc-link {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      padding: 0.25rem 0;
+      transition: var(--transition-fast);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .toc-link:hover {
+      color: var(--brand);
+    }
+    .toc-link.h3 {
+      padding-left: 0.75rem;
+    }
+
+    /* Back Home Floating Button */
+    .floating-back-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.875rem;
+    }
+
+    /* Mobile Sidebar Overlay Button */
+    .mobile-docs-menu-btn {
+      display: none;
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 100;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+      cursor: pointer;
+      place-items: center;
+      font-size: 1.25rem;
+    }
+
+    @media (max-width: 920px) {
+      .mobile-docs-menu-btn {
+        display: grid;
+      }
+      .docs-sidebar {
+        position: fixed;
+        left: -100%;
+        transition: left 0.3s ease;
+        z-index: 99;
+      }
+      .docs-sidebar.active {
+        left: 0;
+        width: 80vw;
+        max-width: 320px;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+      }
+    }
   </style>
 
   <!-- Structured Data (JSON-LD) -->
@@ -155,7 +465,7 @@
     "description": "Secure, highly-scalable OAuth 2.0 & OpenID Connect identity engine built for developers and AI agents.",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://authhub.dev/docs/search.html?q={search_term_string}",
+      "target": "https://authhub.dev/docs/index.html?q={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   }
@@ -179,7 +489,7 @@
 
   <!-- Header Header -->
   <header class="site-header">
-    <a href="index.html" class="brand">
+    <a href="#/" class="brand">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#2563eb" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M2 17L12 22L22 17" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -191,12 +501,12 @@
     <button class="mobile-menu-toggle" id="mobile-toggle" aria-label="Toggle navigation menu">☰</button>
 
     <nav class="top-nav" id="site-nav">
-      <a href="getting-started.html">Docs</a>
-      <a href="tutorials/index.html">Tutorials</a>
-      <a href="api-reference/index.html">API Reference</a>
-      <a href="security/index.html">Security</a>
-      <a href="AI_AGENTS.html">AI Agents</a>
-      <a href="operations.html">Operations</a>
+      <a href="#/getting-started">Docs</a>
+      <a href="#/tutorials/index">Tutorials</a>
+      <a href="#/api-reference/index">API Reference</a>
+      <a href="#/security/index">Security</a>
+      <a href="#/AI_AGENTS">AI Agents</a>
+      <a href="#/operations">Operations</a>
     </nav>
 
     <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -213,169 +523,304 @@
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
         </svg>
       </button>
-      <a href="getting-started.html" class="header-cta">Get Started</a>
+      <a href="#/getting-started" class="header-cta">Get Started</a>
     </div>
   </header>
 
-  <!-- Main Content Layout -->
-  <main id="main-content">
-    
-    <!-- Hero Section -->
-    <section class="hero">
-      <div>
-        <p class="eyebrow">Enterprise Identity & Access Engine</p>
-        <h1>AuthHub Infrastructure</h1>
-        <p class="lead">
-          A high-performance OAuth 2.0 & OpenID Connect provider built for security-first applications, rapid developer integrations, and seamless orchestration by autonomous AI coding agents.
-        </p>
-        <div class="hero-actions">
-          <a href="getting-started.html" class="button primary">Quick Start Guide</a>
-          <a href="api-reference/index.html" class="button secondary">Interactive API Reference</a>
-        </div>
-      </div>
+  <!-- ==========================================================================
+       VIEW A: PORTAL LANDING SECTION
+       ========================================================================== -->
+  <div id="landing-view">
+    <main id="main-content">
       
-      <!-- Interactive Hero Panel (Code Snippet & Health Card) -->
-      <div class="hero-panel">
-        <div class="status-row">
-          <span>OIDC Configuration Endpoint</span>
-          <a href="https://authhub-npym.onrender.com/api/v1/docs/openapi.json" style="font-size: 0.82rem; color: var(--brand); font-family: monospace; word-break: break-all;">
-            api/v1/docs/openapi.json
+      <!-- Hero Section -->
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Enterprise Identity & Access Engine</p>
+          <h1>AuthHub Infrastructure</h1>
+          <p class="lead">
+            A high-performance OAuth 2.0 & OpenID Connect provider built for security-first applications, rapid developer integrations, and seamless orchestration by autonomous AI coding agents.
+          </p>
+          <div class="hero-actions">
+            <a href="#/getting-started" class="button primary">Quick Start Guide</a>
+            <a href="#/api-reference/index" class="button secondary">Interactive API Reference</a>
+          </div>
+        </div>
+        
+        <!-- Interactive Hero Panel (Code Snippet & Health Card) -->
+        <div class="hero-panel">
+          <div class="status-row">
+            <span>OIDC Configuration Endpoint</span>
+            <a href="https://authhub-npym.onrender.com/api/v1/docs/openapi.json" style="font-size: 0.82rem; color: var(--brand); font-family: monospace; word-break: break-all;">
+              api/v1/docs/openapi.json
+            </a>
+          </div>
+          <div class="code-snippet">
+  <span class="code-comment"># Perform authentication flow via CLI</span>
+  curl -X POST https://authhub.dev/oauth/token \
+    -d <span class="code-string">"grant_type=authorization_code"</span> \
+    -d <span class="code-string">"client_id=authhub_app_client"</span> \
+    -d <span class="code-string">"code_verifier=pkce_verifier"</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; border-top: 1px solid var(--border); font-size: 0.85rem;">
+            <span style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+              <span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent);"></span>
+              API Service Online
+            </span>
+            <a href="https://authhub-npym.onrender.com/api/v1/health" style="color: var(--muted); font-weight: 500;">Check Health Status →</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Key Product Capabilities Section -->
+      <section class="section-band">
+        <div class="section-heading">
+          <p class="eyebrow">Specifications</p>
+          <h2>Built for Complete Integration Control</h2>
+          <p style="color: var(--muted); margin: 0; max-width: 600px;">
+            Empower your developers, operators, and AI tools with standardized, cryptographically secure components.
+          </p>
+        </div>
+
+        <!-- Feature Grid -->
+        <div class="feature-grid">
+          <a href="#/oauth/index">
+            OAuth 2.0 Engine
+            <span>RFC 6749 compliant core supporting authorization codes, client credentials, and PKCE extension flow.</span>
+          </a>
+          <a href="#/oidc/index">
+            OpenID Connect
+            <span>Exposes standard id_tokens, discovery configuration documents, and JWKS endpoints for trust validation.</span>
+          </a>
+          <a href="#/security/session-revocation">
+            MFA & Sessions
+            <span>Real-time multi-factor challenge prompts, cryptographically sealed sessions, and instantaneous global revocations.</span>
+          </a>
+          <a href="#/security/index">
+            Multi-tenancy
+            <span>Isolate user namespaces, organization tenants, metadata schemas, and custom JWT claim rulesets safely.</span>
+          </a>
+          <a href="#/webhooks/index">
+            Webhooks Routing
+            <span>Receive transactional hooks on login, enrollment, creation, and subscription status updates instantly.</span>
+          </a>
+          <a href="#/billing/index">
+            Billing Sync
+            <span>Direct stripe hooks sync, usage metering pipelines, tiered subscription quotas, and seat limits.</span>
+          </a>
+          <a href="#/tutorials/observability-dashboard">
+            Observability
+            <span>Standard Prometheus hooks, Grafana dashboards, OpenTelemetry distributed logs, and audit logs.</span>
+          </a>
+          <a href="#/AI_AGENTS">
+            AI-Optimized Integration
+            <span>Pre-engineered context files, JSON schemas, and structured prompt guidelines for autonomous developers.</span>
           </a>
         </div>
-        <div class="code-snippet">
-<span class="code-comment"># Perform authentication flow via CLI</span>
-curl -X POST https://authhub.dev/oauth/token \
-  -d <span class="code-string">"grant_type=authorization_code"</span> \
-  -d <span class="code-string">"client_id=authhub_app_client"</span> \
-  -d <span class="code-string">"code_verifier=pkce_verifier"</span>
+      </section>
+
+      <!-- Developer Journey Guidance Section -->
+      <section class="journeys">
+        <div>
+          <p class="eyebrow">Tailored Onboarding Paths</p>
+          <h2>Developer Journeys</h2>
+          <p>
+            Skip the guesswork. Choose the documentation workflow that matches your active operational role in the project ecosystem.
+          </p>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; border-top: 1px solid var(--border); font-size: 0.85rem;">
-          <span style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
-            <span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent);"></span>
-            API Service Online
-          </span>
-          <a href="https://authhub-npym.onrender.com/api/v1/health" style="color: var(--muted); font-weight: 500;">Check Health Status →</a>
+
+        <!-- Journey Grid -->
+        <div class="journey-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+          <a href="#/getting-started">
+            <h3>New to AuthHub</h3>
+            <span>Complete our introductory tutorial, spin up a local development sandboxed database, and implement user signup.</span>
+          </a>
+          <a href="#/api-reference/index">
+            <h3>Integrating APIs</h3>
+            <span>Audit detailed curl definitions, inspect TypeScript parameters, and verify JSON response models directly.</span>
+          </a>
+          <a href="#/operations">
+            <h3>Operating Production</h3>
+            <span>Verify Kubernetes deployments, configure resilient clustering, and set up daily backup rules.</span>
+          </a>
+          <a href="#/AI_AGENTS">
+            <h3>AI Coding Agents</h3>
+            <span>Provide your AI coding assistant with our structured schemas to execute migrations without code reading.</span>
+          </a>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Key Product Capabilities Section -->
-    <section class="section-band">
-      <div class="section-heading">
-        <p class="eyebrow">Specifications</p>
-        <h2>Built for Complete Integration Control</h2>
-        <p style="color: var(--muted); margin: 0; max-width: 600px;">
-          Empower your developers, operators, and AI tools with standardized, cryptographically secure components.
-        </p>
-      </div>
+    </main>
 
-      <!-- Feature Grid -->
-      <div class="feature-grid">
-        <a href="oauth/index.html">
-          OAuth 2.0 Engine
-          <span>RFC 6749 compliant core supporting authorization codes, client credentials, and PKCE extension flow.</span>
-        </a>
-        <a href="oidc/index.html">
-          OpenID Connect
-          <span>Exposes standard id_tokens, discovery configuration documents, and JWKS endpoints for trust validation.</span>
-        </a>
-        <a href="security/session-revocation.html">
-          MFA & Sessions
-          <span>Real-time multi-factor challenge prompts, cryptographically sealed sessions, and instantaneous global revocations.</span>
-        </a>
-        <a href="security/index.html">
-          Multi-tenancy
-          <span>Isolate user namespaces, organization tenants, metadata schemas, and custom JWT claim rulesets safely.</span>
-        </a>
-        <a href="webhooks/index.html">
-          Webhooks Routing
-          <span>Receive transactional hooks on login, enrollment, creation, and subscription status updates instantly.</span>
-        </a>
-        <a href="billing/index.html">
-          Billing Sync
-          <span>Direct stripe hooks sync, usage metering pipelines, tiered subscription quotas, and seat limits.</span>
-        </a>
-        <a href="tutorials/observability-dashboard.html">
-          Observability
-          <span>Standard Prometheus hooks, Grafana dashboards, OpenTelemetry distributed logs, and audit logs.</span>
-        </a>
-        <a href="AI_AGENTS.html">
-          AI-Optimized Integration
-          <span>Pre-engineered context files, JSON schemas, and structured prompt guidelines for autonomous developers.</span>
-        </a>
-      </div>
-    </section>
-
-    <!-- Developer Journey Guidance Section -->
-    <section class="journeys">
+    <!-- Footer Footer -->
+    <footer class="site-footer">
       <div>
-        <p class="eyebrow">Tailored Onboarding Paths</p>
-        <h2>Developer Journeys</h2>
-        <p>
-          Skip the guesswork. Choose the documentation workflow that matches your active operational role in the project ecosystem.
-        </p>
-      </div>
-
-      <!-- Journey Grid -->
-      <div class="journey-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
-        <a href="getting-started.html">
-          <h3>New to AuthHub</h3>
-          <span>Complete our introductory tutorial, spin up a local development sandboxed database, and implement user signup.</span>
-        </a>
-        <a href="api-reference/index.html">
-          <h3>Integrating APIs</h3>
-          <span>Audit detailed curl definitions, inspect TypeScript parameters, and verify JSON response models directly.</span>
-        </a>
-        <a href="operations.html">
-          <h3>Operating Production</h3>
-          <span>Verify Kubernetes deployments, configure resilient clustering, and set up daily backup rules.</span>
-        </a>
-        <a href="AI_AGENTS.html">
-          <h3>AI Coding Agents</h3>
-          <span>Provide your AI coding assistant with our structured schemas to execute migrations without code reading.</span>
-        </a>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Footer Footer -->
-  <footer class="site-footer">
-    <div>
-      <p style="font-weight: 800; font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">AuthHub</p>
-      <p style="font-size: 0.85rem; max-width: 250px;">Production-grade authentication infrastructure for human developers and AI code engines.</p>
-      <p style="font-size: 0.8rem; margin-top: 1rem;">© 2026 AuthHub Contributors. Released under MIT License.</p>
-    </div>
-    
-    <nav>
-      <div style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 140px;">
-        <span style="color: #fff; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Docs</span>
-        <a href="getting-started.html">Getting Started</a>
-        <a href="introduction.html">Introduction</a>
-        <a href="quickstart.html">Quick Start</a>
-        <a href="architecture.html">Core Concepts</a>
+        <p style="font-weight: 800; font-size: 1.2rem; color: #fff; margin-bottom: 0.5rem;">AuthHub</p>
+        <p style="font-size: 0.85rem; max-width: 250px;">Production-grade authentication infrastructure for human developers and AI code engines.</p>
+        <p style="font-size: 0.8rem; margin-top: 1rem;">© 2026 AuthHub Contributors. Released under MIT License.</p>
       </div>
       
-      <div style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 140px;">
-        <span style="color: #fff; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Security</span>
-        <a href="security/index.html">Security Center</a>
-        <a href="security/mfa-enforcement.html">MFA Setup</a>
-        <a href="security/session-revocation.html">Session Security</a>
-        <a href="security/root-api-keys.html">API Key Control</a>
+      <nav>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 140px;">
+          <span style="color: #fff; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Docs</span>
+          <a href="#/getting-started">Getting Started</a>
+          <a href="#/introduction">Introduction</a>
+          <a href="#/quickstart">Quick Start</a>
+          <a href="#/architecture">Core Concepts</a>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 140px;">
+          <span style="color: #fff; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Security</span>
+          <a href="#/security/index">Security Center</a>
+          <a href="#/security/mfa-enforcement">MFA Setup</a>
+          <a href="#/security/session-revocation">Session Security</a>
+          <a href="#/security/root-api-keys">API Key Control</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 140px;">
+          <span style="color: #fff; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">AI & Reference</span>
+          <a href="#/AI_AGENTS">AI Agents Specs</a>
+          <a href="#/faq">FAQ</a>
+          <a href="#/glossary">Glossary</a>
+          <a href="#/openapi-reconciliation">OpenAPI Audit</a>
+        </div>
+      </nav>
+    </footer>
+  </div>
+
+
+  <!-- ==========================================================================
+       VIEW B: PORTAL DOCUMENTATION VIEWER SECTION
+       ========================================================================== -->
+  <div id="docs-view">
+    <div class="docs-layout">
+      
+      <!-- Left Sidebar Dynamic Menu -->
+      <aside class="docs-sidebar" id="sidebar-panel">
+        <input type="text" class="sidebar-search" id="docs-search" placeholder="Search documentation...">
+        <div id="sidebar-groups-container">
+          <!-- Populated Dynamically -->
+        </div>
+      </aside>
+
+      <!-- Center MD Content panel -->
+      <div class="docs-content-wrapper">
+        <a href="#/" class="floating-back-home">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Back to Portal Home
+        </a>
+        <article class="docs-markdown-body" id="markdown-container">
+          <!-- Rendered dynamically -->
+        </article>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 0.5rem; min-width: 140px;">
-        <span style="color: #fff; font-size: 0.85rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">AI & Reference</span>
-        <a href="AI_AGENTS.html">AI Agents Specs</a>
-        <a href="faq.html">FAQ</a>
-        <a href="glossary.html">Glossary</a>
-        <a href="openapi-reconciliation.html">OpenAPI Audit</a>
-      </div>
-    </nav>
-  </footer>
+      <!-- Right TOC panel -->
+      <aside class="docs-toc">
+        <div class="toc-title">On this page</div>
+        <div id="toc-container">
+          <!-- Rendered dynamically -->
+        </div>
+      </aside>
 
-  <!-- Theme Toggle Logic & Mobile Menu Scripts -->
+    </div>
+  </div>
+
+  <!-- Mobile Floating Nav Drawer Button -->
+  <button class="mobile-docs-menu-btn" id="mobile-docs-toggle" aria-label="Toggle Documentation Sidebar">☰</button>
+
+
+  <!-- Dynamic Portal Routing Engine Scripts -->
   <script>
+    // Hardcoded representation of sidebar.yaml for rapid offline rendering
+    const sidebarStructure = [
+      {
+        group: "Getting Started",
+        items: [
+          { label: "Introduction", path: "introduction.md" },
+          { label: "Quick Start", path: "quickstart.md" },
+          { label: "Getting Started Overview", path: "getting-started.md" },
+          { label: "Create Account", path: "getting-started/create-account.md" },
+          { label: "Create OAuth Client", path: "getting-started/create-oauth-client.md" },
+          { label: "PKCE Verification Flow", path: "getting-started/pkce.md" },
+          { label: "Login & Tokens exchange", path: "getting-started/login-and-tokens.md" },
+          { label: "Core Architecture", path: "architecture.md" }
+        ]
+      },
+      {
+        group: "Authentication",
+        items: [
+          { label: "OAuth 2.0 Engine", path: "oauth/index.md" },
+          { label: "OpenID Connect", path: "oidc/index.md" },
+          { label: "Session Revocation", path: "security/session-revocation.md" },
+          { label: "MFA Enforcement", path: "security/mfa-enforcement.md" },
+          { label: "Password Reset", path: "tutorials/password-reset.md" },
+          { label: "Email Verification", path: "tutorials/email-verification.md" }
+        ]
+      },
+      {
+        group: "API Reference",
+        items: [
+          { label: "API Reference Hub", path: "api-reference/index.md" },
+          { label: "Authentication Endpoints", path: "api-reference/auth/index.md" },
+          { label: "OAuth APIs", path: "api-reference/oauth.md" },
+          { label: "OIDC APIs", path: "api-reference/oidc.md" },
+          { label: "Developer Management APIs", path: "api-reference/developer/index.md" },
+          { label: "Admin Operations APIs", path: "api-reference/admin/index.md" },
+          { label: "Billing APIs", path: "billing/index.md" },
+          { label: "Webhook APIs", path: "webhooks/index.md" }
+        ]
+      },
+      {
+        group: "Guides & SDKs",
+        items: [
+          { label: "Tutorials Directory", path: "tutorials/index.md" },
+          { label: "Javascript SDK Guide", path: "sdk-guides/javascript.md" },
+          { label: "React SDK Guide", path: "sdk-guides/react.md" },
+          { label: "Next.js SDK Guide", path: "sdk-guides/nextjs.md" },
+          { label: "Express SDK Guide", path: "sdk-guides/express.md" },
+          { label: "Python SDK Guide", path: "sdk-guides/python.md" },
+          { label: "React Native SDK Guide", path: "sdk-guides/react-native.md" },
+          { label: "Migrating from Auth0", path: "migration-guides/from_auth0.md" },
+          { label: "Migrating from Clerk", path: "migration-guides/from_clerk.md" },
+          { label: "Migrating from Firebase", path: "migration-guides/from_firebase.md" },
+          { label: "Migrating from Keycloak", path: "migration-guides/from_keycloak.md" },
+          { label: "Migrating from Supabase", path: "migration-guides/from_supabase.md" }
+        ]
+      },
+      {
+        group: "Operations",
+        items: [
+          { label: "Deployment Configurations", path: "operations.md" },
+          { label: "GitHub Pages Deploy", path: "deployment/github-pages.md" },
+          { label: "Observability Metrics", path: "tutorials/observability-dashboard.md" },
+          { label: "Security Policies", path: "security/index.md" },
+          { label: "Root API Keys Rotation", path: "security/root-api-keys.md" },
+          { label: "Troubleshooting Guide", path: "troubleshooting/common-errors.md" }
+        ]
+      },
+      {
+        group: "AI Agent Assets",
+        items: [
+          { label: "AI Agents Manifest", path: "AI_AGENTS.md" },
+          { label: "AI Onboarding Index", path: "ai/index.md" },
+          { label: "AI Context Loader", path: "ai/onboarding.md" },
+          { label: "AI Schema Specifications", path: "ai/integration.md" },
+          { label: "AI Command Reference", path: "ai/quick-reference.md" }
+        ]
+      },
+      {
+        group: "Reference Tables",
+        items: [
+          { label: "Developer Navigation Map", path: "navigation.md" },
+          { label: "Search Index Systems", path: "search.md" },
+          { label: "Frequently Asked Questions", path: "faq.md" },
+          { label: "Identity Glossary", path: "glossary.md" },
+          { label: "OpenAPI Reconciliation Report", path: "openapi-reconciliation.md" },
+          { label: "Remediation Audit Report", path: "remediation-report.md" }
+        ]
+      }
+    ];
+
     // Remove loading screen on load
     window.addEventListener('DOMContentLoaded', () => {
       const loader = document.getElementById('loading');
@@ -385,11 +830,9 @@ curl -X POST https://authhub.dev/oauth/token \
       }
     });
 
-    // Dark Mode Toggle logic
+    // Dark Mode Theme Switcher
     const themeBtn = document.getElementById('theme-toggle');
     const themeIcon = document.getElementById('theme-toggle-icon');
-    
-    // Set theme on load based on localStorage or user preferences
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
@@ -409,7 +852,6 @@ curl -X POST https://authhub.dev/oauth/token \
 
     function updateThemeIcon(isDark) {
       if (isDark) {
-        // Change icon to Sun
         themeIcon.innerHTML = `
           <circle cx="12" cy="12" r="5"></circle>
           <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -422,20 +864,227 @@ curl -X POST https://authhub.dev/oauth/token \
           <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
         `;
       } else {
-        // Change icon to Moon
         themeIcon.innerHTML = `
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         `;
       }
     }
 
-    // Responsive Mobile Menu toggle
+    // Responsive hamburger menu toggles
     const mobileBtn = document.getElementById('mobile-toggle');
     const siteNav = document.getElementById('site-nav');
-    
     mobileBtn.addEventListener('click', () => {
       siteNav.classList.toggle('active');
     });
+
+    // Mobile Sidebar slide in
+    const mobileDocsBtn = document.getElementById('mobile-docs-toggle');
+    const sidebarPanel = document.getElementById('sidebar-panel');
+    mobileDocsBtn.addEventListener('click', () => {
+      sidebarPanel.classList.toggle('active');
+    });
+
+    // Render left sidebar menu dynamically
+    function renderSidebar(activePath = "") {
+      const container = document.getElementById('sidebar-groups-container');
+      container.innerHTML = "";
+
+      sidebarStructure.forEach(group => {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'sidebar-group';
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'sidebar-group-title';
+        titleEl.textContent = group.group;
+        groupEl.appendChild(titleEl);
+
+        group.items.forEach(item => {
+          const itemEl = document.createElement('a');
+          // Map to SPA hash
+          const cleanPath = item.path.replace(/\.md$/, "");
+          itemEl.href = `#/${cleanPath}`;
+          itemEl.className = 'sidebar-item';
+          itemEl.textContent = item.label;
+
+          if (item.path === activePath || cleanPath === activePath) {
+            itemEl.className += ' active';
+          }
+
+          groupEl.appendChild(itemEl);
+        });
+
+        container.appendChild(groupEl);
+      });
+    }
+
+    // Search filter inside sidebar
+    document.getElementById('docs-search').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      const items = document.querySelectorAll('.sidebar-item');
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(query)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+
+    // Dynamic router handler
+    async function handleRoute() {
+      // Close mobile overlays on navigation
+      siteNav.classList.remove('active');
+      sidebarPanel.classList.remove('active');
+
+      const hash = window.location.hash || "#/";
+      const landing = document.getElementById('landing-view');
+      const docs = document.getElementById('docs-view');
+      const mobileDocsToggleBtn = document.getElementById('mobile-docs-toggle');
+
+      if (hash === "#/" || hash === "#" || hash === "") {
+        // Landing Page
+        landing.style.display = 'block';
+        docs.style.display = 'none';
+        mobileDocsToggleBtn.style.display = 'none';
+        document.title = "AuthHub Developer Portal | OAuth 2.0, OIDC & AI Identity Infrastructure";
+      } else {
+        // Documentation Page
+        landing.style.display = 'none';
+        docs.style.display = 'block';
+        mobileDocsToggleBtn.style.display = 'grid';
+
+        // Extract clean file path from hash
+        let relativePath = hash.replace(/^#\//, "");
+        
+        // Append .md if not present and no sub-paths extension exists
+        if (!relativePath.endsWith('.md') && !relativePath.includes('.')) {
+          // If it's a folder, redirect index
+          if (relativePath === "oauth" || relativePath === "oidc" || relativePath === "tutorials" || relativePath === "api-reference" || relativePath === "security" || relativePath === "billing" || relativePath === "webhooks" || relativePath === "ai") {
+            relativePath += "/index.md";
+          } else {
+            relativePath += ".md";
+          }
+        }
+
+        renderSidebar(relativePath);
+        await loadMarkdown(relativePath);
+      }
+    }
+
+    // Fetch and render markdown files dynamically
+    async function loadMarkdown(path) {
+      const mdContainer = document.getElementById('markdown-container');
+      mdContainer.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.75rem; color: var(--muted); font-weight: 500;">
+          <div style="border: 2px solid var(--border); border-top: 2px solid var(--brand); border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite;"></div>
+          Fetching document content...
+        </div>
+      `;
+
+      try {
+        // Fetch raw markdown relative to index.html (hosted folder)
+        const response = await fetch(path);
+        if (!response.ok) {
+          throw new Error(`Failed to load document: ${response.statusText}`);
+        }
+        
+        let markdown = await response.text();
+
+        // Standard custom marked configuration options
+        marked.setOptions({
+          highlight: function(code, lang) {
+            if (Prism.languages[lang]) {
+              return Prism.highlight(code, Prism.languages[lang], lang);
+            }
+            return code;
+          },
+          breaks: true
+        });
+
+        // Custom parser overrides for beautiful alert boxes (e.g. > [!NOTE])
+        const alertRegex = />\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*\n([\s\S]*?)(?=\n\n|\n[^\s>])/g;
+        markdown = markdown.replace(alertRegex, (match, type, content) => {
+          const lowerType = type.toLowerCase();
+          const cleanContent = content.replace(/^>\s?/gm, "").trim();
+          return `<div class="alert alert-${lowerType}"><strong>${type}</strong>: ${cleanContent}</div>`;
+        });
+
+        // Compile Markdown to HTML
+        let htmlContent = marked.parse(markdown);
+
+        // Dynamic relative Markdown link rewriter!
+        // Transforms '<a href="architecture.md">' into '<a href="#/architecture">'
+        // Transforms '<a href="getting-started/pkce.md">' into '<a href="#/getting-started/pkce">'
+        const linkParser = /href="([^"#\s]+?\.md)"/g;
+        htmlContent = htmlContent.replace(linkParser, (match, link) => {
+          const cleanLink = link.replace(/\.md$/, "");
+          return `href="#/${cleanLink}"`;
+        });
+
+        mdContainer.innerHTML = htmlContent;
+
+        // Force syntax highlighting execution
+        Prism.highlightAllUnder(mdContainer);
+
+        // Generate dynamic table of contents (TOC)
+        generateTOC(mdContainer);
+
+        // Update browser tab title
+        const h1 = mdContainer.querySelector('h1');
+        if (h1) {
+          document.title = `${h1.textContent} | AuthHub Docs`;
+        }
+
+      } catch (err) {
+        mdContainer.innerHTML = `
+          <div style="padding: 2rem; background: rgba(239,68,68,0.04); border: 1px solid var(--border); border-radius: 8px;">
+            <h2 style="color: #ef4444; margin-top:0;">Document Loading Error</h2>
+            <p>We encountered an issue retrieving the requested page path: <code>${path}</code>.</p>
+            <p style="color: var(--muted); font-size: 0.9rem;">Reason: ${err.message}</p>
+            <a href="#/" class="button primary" style="margin-top: 1rem; display: inline-flex;">Return to Portal Home</a>
+          </div>
+        `;
+      }
+    }
+
+    // Generate table of contents dynamically
+    function generateTOC(container) {
+      const tocContainer = document.getElementById('toc-container');
+      tocContainer.innerHTML = "";
+
+      const headings = container.querySelectorAll('h2, h3');
+      if (headings.length === 0) {
+        tocContainer.innerHTML = "<div style='color: var(--muted); font-size: 0.8rem;'>No headers on this page</div>";
+        return;
+      }
+
+      headings.forEach((heading, idx) => {
+        // Ensure element has an ID to anchor
+        if (!heading.id) {
+          heading.id = `heading-${idx}`;
+        }
+
+        const link = document.createElement('a');
+        link.href = `#${heading.id}`;
+        link.className = `toc-link ${heading.tagName.toLowerCase()}`;
+        link.textContent = heading.textContent;
+
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          heading.scrollIntoView({ behavior: 'smooth' });
+          // Update URL hash without breaking the router
+          history.pushState(null, null, `${window.location.hash.split('#')[0]}#${window.location.hash.split('#')[1]}#${heading.id}`);
+        });
+
+        tocContainer.appendChild(link);
+      });
+    }
+
+    // Bind route events
+    window.addEventListener('hashchange', handleRoute);
+    window.addEventListener('load', handleRoute);
   </script>
 </body>
 </html>
