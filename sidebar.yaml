@@ -1,0 +1,40 @@
+- group: Getting Started
+  items:
+    - page: docs/getting-started/index.md
+    - page: docs/getting-started/create-account.md
+    - page: docs/getting-started/create-oauth-client.md
+    - page: docs/getting-started/pkce.md
+    - page: docs/getting-started/login-and-tokens.md
+- group: Tutorials
+  items:
+    - page: docs/tutorials/index.md
+    - page: docs/tutorials/password-reset.md
+    - page: docs/tutorials/email-verification.md
+    - page: docs/tutorials/mfa-challenge.md
+    - page: docs/tutorials/provider-linking.md
+    - page: docs/tutorials/provider-unlinking.md
+    - page: docs/tutorials/logout-all-devices.md
+    - page: docs/tutorials/session-management.md
+    - page: docs/tutorials/admin-impersonation.md
+    - page: docs/tutorials/token-revocation.md
+    - page: docs/tutorials/token-introspection.md
+    - page: docs/tutorials/stripe-integration.md
+    - page: docs/tutorials/webhook-receiver.md
+    - page: docs/tutorials/billing-entitlements.md
+    - page: docs/tutorials/observability-dashboard.md
+- group: API Reference
+  items:
+    - page: docs/api-reference/index.md
+    - page: docs/api-reference/auth/index.md
+    - page: docs/api-reference/developer/index.md
+    - page: docs/api-reference/admin/index.md
+    - page: docs/api-reference/billing/index.md
+    - page: docs/api-reference/webhooks/index.md
+    - page: docs/oauth/index.md
+    - page: docs/oidc/index.md
+- group: Security and Operations
+  items:
+    - page: docs/security/index.md
+    - page: docs/operations.md
+    - page: docs/faq.md
+    - page: docs/glossary.md
