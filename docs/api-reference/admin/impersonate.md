@@ -20,7 +20,7 @@ Response schema
 
 Security notes
 
-- The resulting token includes the actor (`act`) claim.
+- The resulting token includes the actor (`act`) claim. 
 - No refresh token is issued for impersonation.
 - A notification email is sent to the target user.
 - The event is audited.
