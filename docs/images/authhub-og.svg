@@ -1,0 +1,107 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg-grad" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0b1329"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    
+    <!-- Accent Blue Gradient -->
+    <linearGradient id="blue-grad" x1="100" y1="100" x2="500" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+
+    <!-- Accent Emerald Gradient -->
+    <linearGradient id="emerald-grad" x1="600" y1="100" x2="1100" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+
+    <!-- Text Glow Filter -->
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="630" fill="url(#bg-grad)"/>
+
+  <!-- Decorative Abstract Grid -->
+  <g opacity="0.05">
+    <path d="M 0,100 L 1200,100 M 0,200 L 1200,200 M 0,300 L 1200,300 M 0,400 L 1200,400 M 0,500 L 1200,500" stroke="#ffffff" stroke-width="1"/>
+    <path d="M 200,0 L 200,630 M 400,0 L 400,630 M 600,0 L 600,630 M 800,0 L 800,630 M 1000,0 L 1000,630" stroke="#ffffff" stroke-width="1"/>
+  </g>
+
+  <!-- Glowing background blobs -->
+  <circle cx="200" cy="150" r="300" fill="#2563eb" opacity="0.15" filter="url(#glow)"/>
+  <circle cx="1000" cy="480" r="250" fill="#059669" opacity="0.1" filter="url(#glow)"/>
+
+  <!-- Abstract Identity Token Node illustration -->
+  <g transform="translate(100, 140)">
+    <!-- Interconnecting lines -->
+    <path d="M 150,180 L 350,180 M 250,80 L 250,280" stroke="#334155" stroke-width="3" stroke-dasharray="10 5"/>
+    <path d="M 170,100 L 330,260 M 170,260 L 330,100" stroke="#334155" stroke-width="2" stroke-dasharray="5 5"/>
+
+    <!-- Concentric Target Rings -->
+    <circle cx="250" cy="180" r="140" stroke="#2563eb" stroke-width="2" stroke-dasharray="4 8" opacity="0.3"/>
+    <circle cx="250" cy="180" r="100" stroke="#059669" stroke-width="1" opacity="0.5"/>
+    <circle cx="250" cy="180" r="60" stroke="#ffffff" stroke-width="2" opacity="0.2"/>
+
+    <!-- Glowing Nodes -->
+    <circle cx="250" cy="80" r="12" fill="url(#blue-grad)" filter="url(#glow)"/>
+    <circle cx="250" cy="280" r="12" fill="url(#blue-grad)" filter="url(#glow)"/>
+    <circle cx="150" cy="180" r="12" fill="url(#emerald-grad)" filter="url(#glow)"/>
+    <circle cx="350" cy="180" r="12" fill="url(#emerald-grad)" filter="url(#glow)"/>
+
+    <!-- Core Cryptographic Key Node -->
+    <rect x="220" y="150" width="60" height="60" rx="30" fill="#0f172a" stroke="#ffffff" stroke-width="3" filter="url(#glow)"/>
+    
+    <!-- Shield / Check logomark inside key node -->
+    <path d="M 242,180 L 248,186 L 258,174" stroke="#10b981" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Text Branding -->
+  <g transform="translate(620, 240)">
+    <!-- Subtitle / Eyebrow -->
+    <text x="0" y="0" fill="#10b981" font-family="'Outfit', 'Inter', sans-serif" font-size="20" font-weight="800" letter-spacing="4" text-transform="uppercase">
+      DEVELOPER PORTAL
+    </text>
+    
+    <!-- Main Title -->
+    <text x="0" y="70" fill="#ffffff" font-family="'Outfit', 'Inter', sans-serif" font-size="80" font-weight="900" letter-spacing="-1">
+      AuthHub
+    </text>
+
+    <!-- Glowing dot next to title -->
+    <circle cx="350" cy="45" r="12" fill="#2563eb" filter="url(#glow)"/>
+
+    <!-- Description -->
+    <text x="0" y="130" fill="#94a3b8" font-family="'Inter', sans-serif" font-size="20" font-weight="500">
+      Enterprise OAuth 2.0 &amp; OpenID Connect Engine
+    </text>
+    <text x="0" y="165" fill="#64748b" font-family="'Inter', sans-serif" font-size="16" font-weight="400">
+      Engineered for professional developers, operators, and AI agents.
+    </text>
+
+    <!-- Badges -->
+    <g transform="translate(0, 210)">
+      <!-- Badge 1: OIDC Compliant -->
+      <rect x="0" y="0" width="150" height="34" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <text x="75" y="21" fill="#e2e8f0" font-family="'Inter', sans-serif" font-size="12" font-weight="700" text-anchor="middle">OIDC COMPLIANT</text>
+
+      <!-- Badge 2: AI Agent Ready -->
+      <rect x="165" y="0" width="150" height="34" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <text x="240" y="21" fill="#60a5fa" font-family="'Inter', sans-serif" font-size="12" font-weight="700" text-anchor="middle">AI AGENT READY</text>
+
+      <!-- Badge 3: MFA Enabled -->
+      <rect x="330" y="0" width="130" height="34" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <text x="395" y="21" fill="#34d399" font-family="'Inter', sans-serif" font-size="12" font-weight="700" text-anchor="middle">MFA ENABLED</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,21 @@
+{
+  "name": "AuthHub Developer Portal",
+  "short_name": "AuthHub Docs",
+  "description": "Documentation for AuthHub OAuth, OIDC, MFA, sessions, billing, webhooks, operations, and AI agents.",
+  "start_url": "/docs/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/docs/images/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/docs/images/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml"
+    }
+  ]
+}

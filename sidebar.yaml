@@ -1,40 +1,66 @@
 - group: Getting Started
   items:
+    - page: docs/introduction.md
+    - page: docs/quickstart.md
+    - page: docs/getting-started.md
     - page: docs/getting-started/index.md
     - page: docs/getting-started/create-account.md
     - page: docs/getting-started/create-oauth-client.md
     - page: docs/getting-started/pkce.md
     - page: docs/getting-started/login-and-tokens.md
-- group: Tutorials
+    - page: docs/architecture.md
+- group: Authentication
   items:
-    - page: docs/tutorials/index.md
+    - page: docs/oauth/index.md
+    - page: docs/oidc/index.md
+    - page: docs/security/mfa-enforcement.md
+    - page: docs/security/session-revocation.md
     - page: docs/tutorials/password-reset.md
     - page: docs/tutorials/email-verification.md
-    - page: docs/tutorials/mfa-challenge.md
-    - page: docs/tutorials/provider-linking.md
-    - page: docs/tutorials/provider-unlinking.md
-    - page: docs/tutorials/logout-all-devices.md
-    - page: docs/tutorials/session-management.md
-    - page: docs/tutorials/admin-impersonation.md
-    - page: docs/tutorials/token-revocation.md
-    - page: docs/tutorials/token-introspection.md
-    - page: docs/tutorials/stripe-integration.md
-    - page: docs/tutorials/webhook-receiver.md
-    - page: docs/tutorials/billing-entitlements.md
-    - page: docs/tutorials/observability-dashboard.md
 - group: API Reference
   items:
     - page: docs/api-reference/index.md
     - page: docs/api-reference/auth/index.md
+    - page: docs/api-reference/oauth.md
+    - page: docs/api-reference/oidc.md
     - page: docs/api-reference/developer/index.md
     - page: docs/api-reference/admin/index.md
-    - page: docs/api-reference/billing/index.md
-    - page: docs/api-reference/webhooks/index.md
-    - page: docs/oauth/index.md
-    - page: docs/oidc/index.md
-- group: Security and Operations
+    - page: docs/billing/index.md
+    - page: docs/webhooks/index.md
+- group: Guides
   items:
-    - page: docs/security/index.md
+    - page: docs/tutorials/index.md
+    - page: docs/sdk-guides/javascript.md
+    - page: docs/sdk-guides/react.md
+    - page: docs/sdk-guides/nextjs.md
+    - page: docs/sdk-guides/express.md
+    - page: docs/sdk-guides/python.md
+    - page: docs/sdk-guides/react-native.md
+    - page: docs/migration-guides/from_auth0.md
+    - page: docs/migration-guides/from_clerk.md
+    - page: docs/migration-guides/from_firebase.md
+    - page: docs/migration-guides/from_keycloak.md
+    - page: docs/migration-guides/from_supabase.md
+- group: Operations
+  items:
     - page: docs/operations.md
+    - page: docs/deployment/github-pages.md
+    - page: docs/tutorials/observability-dashboard.md
+    - page: docs/security/index.md
+    - page: docs/security/root-api-keys.md
+    - page: docs/troubleshooting/common-errors.md
+- group: AI
+  items:
+    - page: docs/AI_AGENTS.md
+    - page: docs/ai/index.md
+    - page: docs/ai/onboarding.md
+    - page: docs/ai/integration.md
+    - page: docs/ai/quick-reference.md
+- group: Reference
+  items:
+    - page: docs/navigation.md
+    - page: docs/search.md
     - page: docs/faq.md
     - page: docs/glossary.md
+    - page: docs/openapi-reconciliation.md
+    - page: docs/remediation-report.md

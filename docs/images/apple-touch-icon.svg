@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="AuthHub apple touch icon placeholder">
+  <rect width="180" height="180" rx="40" fill="#0f172a"/>
+  <path d="M90 25 137 48v41c0 31-19 56-47 67-28-11-47-36-47-67V48l47-23Z" fill="#2563eb"/>
+  <path d="M66 89h48v39H66V89Z" fill="#f8fafc"/>
+  <path d="M76 89V70c0-9 6-16 14-16s14 7 14 16v19" fill="none" stroke="#f8fafc" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="90" cy="108" r="6" fill="#2563eb"/>
+</svg>

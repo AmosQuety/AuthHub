@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">AuthHub placeholder logo</title>
+  <desc id="desc">Placeholder AuthHub logo. Replace with final brand asset before launch.</desc>
+  <rect width="256" height="256" rx="48" fill="#0f172a"/>
+  <path d="M128 36 194 68v58c0 43-27 79-66 94-39-15-66-51-66-94V68l66-32Z" fill="#2563eb"/>
+  <path d="M94 126h68v54H94v-54Z" fill="#f8fafc"/>
+  <path d="M108 126V99c0-12 9-22 20-22s20 10 20 22v27" fill="none" stroke="#f8fafc" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="128" cy="151" r="9" fill="#2563eb"/>
+</svg>

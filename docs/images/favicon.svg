@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="AuthHub favicon placeholder">
+  <rect width="64" height="64" rx="14" fill="#0f172a"/>
+  <path d="M32 9 49 17v15c0 11-7 20-17 24-10-4-17-13-17-24V17l17-8Z" fill="#2563eb"/>
+  <path d="M24 32h16v14H24V32Z" fill="#f8fafc"/>
+  <path d="M27 32v-7a5 5 0 0 1 10 0v7" fill="none" stroke="#f8fafc" stroke-width="5" stroke-linecap="round"/>
+</svg>
