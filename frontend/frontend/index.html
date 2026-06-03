@@ -2,14 +2,132 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="icon" href="/favicon.ico" sizes="any" />
+
+    <!-- Viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ============================================================
+         PRIMARY SEO
+         Rule: this is the ONLY place title/description/OG live.
+         Landing.tsx must NOT override these via useEffect.
+    ============================================================ -->
+    <title>AuthHub — Self-Hosted OAuth 2.0, OIDC & Multi-Tenant Identity Platform</title>
+
+    <meta
+      name="description"
+      content="AuthHub is a developer-first, self-hosted identity platform. OAuth 2.0 with PKCE, OpenID Connect, Passkeys, MFA, RBAC, JWT sessions, and multi-tenant architecture. No vendor lock-in. Deploy in minutes."
+    />
+
+    <!-- NOTE: Google ignores <meta name="keywords"> since 2009.
+         Removed to reduce noise. Focus effort on real content. -->
+
+    <meta name="author" content="AuthHub" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+    <!-- Canonical — always the clean root URL -->
+    <link rel="canonical" href="https://auth-hubb.vercel.app/" />
+
+    <!-- ============================================================
+         OPEN GRAPH  (Facebook, LinkedIn, WhatsApp, Slack previews)
+    ============================================================ -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:site_name"   content="AuthHub" />
+    <meta property="og:url"         content="https://auth-hubb.vercel.app/" />
+    <meta property="og:title"       content="AuthHub — Self-Hosted OAuth 2.0 & OIDC Identity Platform" />
+    <meta property="og:description" content="Developer-first auth infrastructure. OAuth 2.0, OpenID Connect, Passkeys, MFA, RBAC, and multi-tenant support. Own your identity stack — no Auth0 or Cognito required." />
+    <!-- IMPORTANT: create this file at /public/og-image.png — 1200×630px -->
+    <meta property="og:image"       content="https://auth-hubb.vercel.app/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt"   content="AuthHub — Self-Hosted OAuth 2.0 & OIDC Identity Platform" />
+    <meta property="og:locale"      content="en_US" />
+
+    <!-- ============================================================
+         TWITTER / X CARD
+    ============================================================ -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:site"        content="@authhub" />
+    <meta name="twitter:creator"     content="@authhub" />
+    <meta name="twitter:title"       content="AuthHub — Self-Hosted OAuth 2.0 & OIDC Identity Platform" />
+    <meta name="twitter:description" content="Developer-first auth infrastructure. OAuth 2.0, OpenID Connect, Passkeys, MFA, RBAC, and multi-tenant support. Own your identity stack." />
+    <meta name="twitter:image"       content="https://auth-hubb.vercel.app/og-image.png" />
+    <meta name="twitter:image:alt"   content="AuthHub platform screenshot" />
+
+    <!-- ============================================================
+         THEME & FAVICON
+    ============================================================ -->
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon"             type="image/png" href="/favicon.png" />
+    <link rel="icon"             href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!-- ============================================================
+         GOOGLE SEARCH CONSOLE VERIFICATION
+    ============================================================ -->
+    <meta name="google-site-verification" content="ArcutWE76F1W4huze1eYEACiBT9zmVivZmmmW1jZPP8" />
+
+    <!-- ============================================================
+         STRUCTURED DATA (JSON-LD)
+         Two schemas: SoftwareApplication + Organization.
+         Placed in <head> so Google reads them at parse time —
+         never inject these dynamically via JS.
+    ============================================================ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "AuthHub",
+      "url": "https://auth-hubb.vercel.app/",
+      "applicationCategory": "SecurityApplication",
+      "operatingSystem": "Cross-platform",
+      "description": "Self-hosted, developer-first identity platform supporting OAuth 2.0 with PKCE, OpenID Connect, Passkeys, MFA, RBAC, JWT sessions, and multi-tenant architecture.",
+      "softwareVersion": "1.0",
+      "programmingLanguage": ["TypeScript", "Node.js"],
+      "screenshot": "https://auth-hubb.vercel.app/og-image.png",
+      "featureList": [
+        "OAuth 2.0 with PKCE",
+        "OpenID Connect (OIDC)",
+        "Passkeys / WebAuthn",
+        "Multi-Factor Authentication (TOTP, recovery codes)",
+        "Role-Based Access Control (RBAC)",
+        "Multi-Tenant Architecture",
+        "JWT Access & Refresh Tokens (RS256)",
+        "Redis-backed session management",
+        "Social Login",
+        "RESTful Developer API"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "AuthHub",
+      "url": "https://auth-hubb.vercel.app/",
+      "logo": "https://auth-hubb.vercel.app/favicon.png",
+      "sameAs": [
+        "https://github.com/AmosQuety/AuthHub"
+      ]
+    }
+    </script>
+
+    <!-- ============================================================
+         PERFORMANCE — font preconnects
+    ============================================================ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-    <title>AuthHub</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
