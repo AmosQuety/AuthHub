@@ -56,7 +56,10 @@ app.use(
   })
 );
 // CORS — only allow explicitly whitelisted origins from env
-const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? "http://localhost:8081,http://localhost:3001,http://localhost:5173,http://localhost:4173")
+// `||` (not `??`) so an unset AND a blank ALLOWED_ORIGINS both fall back to the default —
+// `??` only catches null/undefined, and a blank string would otherwise resolve to zero
+// allowed origins, silently blocking all CORS requests.
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:8081,http://localhost:3001,http://localhost:5173,http://localhost:4173")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
