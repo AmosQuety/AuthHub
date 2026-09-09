@@ -78,7 +78,8 @@ WITH duplicate_aggregate AS (
     min(u."profile_picture_url") FILTER (WHERE u."profile_picture_url" IS NOT NULL) AS profile_picture_url,
     min(u."password_hash") FILTER (WHERE u."password_hash" IS NOT NULL) AS password_hash,
     min(u."tos_accepted_at") FILTER (WHERE u."tos_accepted_at" IS NOT NULL) AS tos_accepted_at,
-    min(u."tenant_id") FILTER (WHERE u."tenant_id" IS NOT NULL) AS tenant_id,
+    -- Postgres has no native min()/max() for uuid; cast through text (any non-null pick is fine here).
+    min(u."tenant_id"::text) FILTER (WHERE u."tenant_id" IS NOT NULL)::uuid AS tenant_id,
     bool_or('ADMIN' = ANY(u."roles")) AS has_admin_role
   FROM user_email_merge_map m
   JOIN "users" u ON u.id = m.duplicate_id
