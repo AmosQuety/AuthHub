@@ -190,7 +190,11 @@ export const token = async (req: Request, res: Response, next: NextFunction): Pr
   try {
     const { grant_type, code, client_id, client_secret, code_verifier, redirect_uri, refresh_token } = req.body;
 
-    if (grant_type !== "authorization_code" && grant_type !== "refresh_token") {
+    if (
+      grant_type !== "authorization_code" &&
+      grant_type !== "refresh_token" &&
+      grant_type !== "client_credentials"
+    ) {
       res.status(400).json({ error: "unsupported_grant_type" });
       return;
     }
@@ -388,6 +392,47 @@ export const token = async (req: Request, res: Response, next: NextFunction): Pr
         token_type: "Bearer",
         expires_in: 900,
         refresh_token: newRefreshToken,
+      });
+
+    } else if (grant_type === "client_credentials") {
+      // RFC 6749 §4.4: client_credentials is for confidential (service) clients only —
+      // a public client has no secret, so it can never prove it's the one calling.
+      if (client.isPublic) {
+        res.status(400).json({
+          error: "unauthorized_client",
+          error_description: "Public clients cannot use the client_credentials grant",
+        });
+        return;
+      }
+      // client_secret was already required and verified above for confidential clients.
+
+      const requestedScopes = typeof req.body.scope === "string" ? req.body.scope.split(" ").filter(Boolean) : [];
+      // No consent step for this grant — a service client is only ever granted its own pre-approved scopes.
+      const grantedScopes = requestedScopes.length > 0
+        ? requestedScopes.filter((s: string) => client.scopes.includes(s))
+        : client.scopes;
+
+      // No end user: sub is the client itself, no roles/entitlements, no refresh token per RFC 6749 §4.4.3.
+      const { accessToken } = await generateTokens(
+        client_id,
+        crypto.randomUUID(),
+        grantedScopes,
+        [],
+        undefined,
+        undefined,
+        [],
+        undefined,
+        undefined,
+        true,
+      );
+
+      res.set("Cache-Control", "no-store");
+      res.set("Pragma", "no-cache");
+      res.json({
+        access_token: accessToken,
+        token_type: "Bearer",
+        expires_in: 900,
+        scope: grantedScopes.join(" "),
       });
     }
   } catch (error) {

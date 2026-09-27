@@ -67,7 +67,7 @@ export function CreateAppModal({
                 <p className="text-xs text-gray-400">Hosted login. Add a "Sign In with AuthHub" button and let us handle passwords.</p>
               </button>
 
-              <button 
+              <button
                 onClick={() => { setSelectedType('m2m'); setIsConfidential(true); setCreateStep('form'); }}
                 className="flex flex-col text-left p-6 rounded-2xl border border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10 transition-colors group"
               >

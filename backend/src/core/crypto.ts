@@ -104,7 +104,8 @@ export const generateTokens = async (
   impersonatorId?: string,
   entitlementScopes: string[] = [],
   email?: string,
-  role?: string
+  role?: string,
+  skipRefreshToken = false
 ) => {
   const key = await getPrivateKey();
   const kid = await getKeyId();
@@ -139,8 +140,8 @@ export const generateTokens = async (
     .setExpirationTime(impersonatorId ? "15m" : "15m") // 15m absolute max for impersonation
     .sign(key);
 
-  if (impersonatorId) {
-    // Impersonation sessions explicitly do NOT get a refresh token!
+  if (impersonatorId || skipRefreshToken) {
+    // Impersonation sessions and client_credentials grants explicitly do NOT get a refresh token!
     return { accessToken, refreshToken: "" };
   }
 
