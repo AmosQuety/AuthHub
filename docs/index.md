@@ -8,7 +8,7 @@ Use this portal to integrate OAuth 2.0, OpenID Connect, MFA, session management,
 
 - [Introduction](introduction.md)
 - [Quick Start](quickstart.md)
-- [Getting Started](getting-started/index.md)
+- [Getting Started](getting-started.md)
 - [API Reference](api-reference/index.md)
 - [Tutorials](tutorials/index.md)
 - [Security](security/index.md)

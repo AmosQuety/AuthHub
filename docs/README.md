@@ -1,8 +1,8 @@
 # AuthHub Developer Portal Infrastructure
 
-Welcome to the **AuthHub Developer Portal** repository directory. This folder houses the entire static documentation ecosystem, landing templates, social assets, styling layouts, search indexes, and SEO parameters. 
+Welcome to the **AuthHub Developer Portal** repository directory. This folder houses the entire static documentation ecosystem, landing template, social assets, styling, and SEO parameters.
 
-The developer portal is compiled via **Redocly CLI** and deployed automatically using **GitHub Pages**.
+The portal is a **hand-rolled static single-page app**: `docs/index.html` fetches the raw markdown files in this folder over `fetch()`, renders them client-side with `marked` + Prism, and routes between pages via URL hash fragments (e.g. `#/getting-started.md`). It's deployed as-is to **GitHub Pages** — there is no build step that compiles the markdown into standalone HTML pages, so linking directly to `/getting-started.html` (without going through `index.html`) will 404.
 
 ---
 
@@ -11,24 +11,24 @@ The developer portal is compiled via **Redocly CLI** and deployed automatically 
 ```
 docs/
 ├── .nojekyll                  # Tells GitHub Pages not to build with Jekyll
-├── index.html                 # Main landing page template and theme shell
-├── index.md                   # Home page markdown fallback
+├── index.html                 # The SPA shell: layout, nav, search, markdown renderer
+├── index.md                   # Home page markdown content
 ├── README.md                  # This management guide
 ├── getting-started.md         # Onboarding entry point guide
-├── navigation.md              # Information Architecture specification
-├── search.md                  # Indexing and search experience documentation
+├── navigation.md              # Information Architecture reference
+├── search.md                  # Search & SEO reference
 ├── introduction.md            # AuthHub core introduction
 ├── quickstart.md              # Shortest integration manual
 ├── architecture.md            # Technical specifications and token mechanics
-├── operations.md              # Resilient deployment models and cluster advice
+├── operations.md              # Deployment models and operational advice
 ├── faq.md                     # Frequently Asked Questions
 ├── glossary.md                # Identity terminologies
-├── AI_AGENTS.md               # Primary prompt directives and AI integration file
-├── openapi-reconciliation.md   # Open API consistency audit report
+├── AI_AGENTS.md                # Primary directives and AI integration file
+├── openapi-reconciliation.md   # OpenAPI consistency audit report
 │
-├── assets/                    # Static download files (PDFs, templates)
+├── assets/                    # Static download files
 ├── styles/
-│   └── authhub.css            # Vanilla CSS site layout styling sheet
+│   └── authhub.css            # Site layout/theme stylesheet
 ├── images/
 │   ├── authhub-og.svg         # Open Graph artwork SVG preview
 │   ├── favicon.png            # Desktop browser PNG favicon
@@ -59,40 +59,31 @@ docs/
 
 ## ⚙️ Core Configuration
 
-All navigation routes, search engines, API targets, themes, and rule parameters are controlled from the root config:
-* 🔗 [redocly.yaml](file:///g:/MyProjects/new%20code/AuthHub/redocly.yaml)
+The site's navigation is defined in **three places that must currently be kept in sync manually** (a known duplication — consolidating onto one source is worth doing, but out of scope here):
+1. [`sidebar.yaml`](../sidebar.yaml) / [`navigation.yaml`](../navigation.yaml) at the repo root — the nominal source spec.
+2. `sidebarStructure` — a JS array near the bottom of `docs/index.html`, explicitly commented as "a hardcoded representation of sidebar.yaml." This is what the live site actually renders; the two files above have no runtime effect on their own.
+3. [`docs/navigation.md`](navigation.md) — the human-readable IA reference for people browsing the repo.
 
-### Key Configuration Nodes in `redocly.yaml`:
-1. **`apis`**: Maps OpenID Connect endpoints to render the OpenAPI standard playground dynamically.
-2. **`theme`**: Tailors primary, text, right-panel, success, and error styling tokens.
-3. **`navbar` & `sidebar`**: Coordinates full document groupings logically.
-4. **`search`**: Tunes the `flexsearch` algorithm indexing priority.
-5. **`seo`**: Controls canonical links and general portal descriptions.
+[`redocly.yaml`](../redocly.yaml) at the repo root is unrelated to the three files above — it exists only to drive `redocly lint` in CI, which validates the OpenAPI document served live by the backend at `/api/v1/docs/openapi.json`. It is **not** used to build or host this site — the wider navbar/sidebar/search/versions config style Redocly supports elsewhere describes a separate, paid Redocly Reunite portal product that this project does not run.
 
 ---
 
 ## 💻 Local Development
 
-Run the following instructions to test, lint, and preview the developer portal locally.
-
 ### 1. Prerequisites
-Ensure you have **Node.js** v20+ installed on your workspace.
+Any static file server (Node.js v20+ recommended).
 
-### 2. Install Redocly CLI
+### 2. Preview locally
+From the repo root:
+```bash
+npx serve docs
+```
+Then open the printed local URL — `index.html` loads and renders the markdown pages client-side, identically to production.
+
+### 3. Lint the OpenAPI document (optional)
+This validates the live API's OpenAPI output, not the docs site itself:
 ```bash
 npm install -g @redocly/cli@latest
-```
-
-### 3. Run Local Preview Server
-Spin up the live-reloading hot-development preview server:
-```bash
-redocly preview authhub
-```
-* The portal will be served dynamically at `http://localhost:8080/`.
-
-### 4. Lint Configurations
-Verify OIDC definitions and Redocly rules conform to standards:
-```bash
 redocly lint authhub
 ```
 
@@ -100,18 +91,19 @@ redocly lint authhub
 
 ## 🚀 CI/CD & Deployments
 
-The portal employs a zero-touch GitOps deployment loop:
-* Every commit pushed to the `main` branch triggers the GitHub Actions workflow at [docs.yml](file:///.github/workflows/docs.yml).
-* **Lint Check**: Validates the OpenAPI schemas and configuration models.
-* **Link Audit**: Scans and flags broken URLs in markdown pages dynamically using `lychee-action`.
-* **Deploy**: Builds files and deploys securely to the custom domain page endpoint via GitHub Actions.
+The portal employs a zero-touch GitOps deployment loop, defined in [`.github/workflows/docs.yml`](../.github/workflows/docs.yml):
+* Every commit pushed to `main` that touches `docs/**` (or the workflow/config files) triggers the workflow.
+* **Lint Check**: Validates the live OpenAPI document via `redocly lint authhub`.
+* **Link Audit**: Scans and flags broken internal URLs in the built `dist/**/*.html` and `dist/**/*.md` files using `lychee-action`.
+* **Deploy**: Copies `docs/`, `sitemap.xml`, `robots.txt`, and `.nojekyll` into `dist/` and publishes it to GitHub Pages via `actions/deploy-pages`.
 
-For detailed custom DNS settings, HTTPS setups, and search consoles verification check the [GitHub Pages Deployment Handbook](file:///g:/MyProjects/new%20code/AuthHub/docs/deployment/github-pages.md).
+For custom DNS/HTTPS setup, see the [GitHub Pages Deployment Handbook](deployment/github-pages.md).
 
 ---
 
 ## 🤖 AI Agent Integration
-To make our identity portal AI-friendly:
-- Place absolute references to [AI_AGENTS.md](file:///g:/MyProjects/new%20code/AuthHub/docs/AI_AGENTS.md) in system prompts.
-- Ensure the prompt context loaders inside the `ai/` folder stay synchronized with the latest API parameters.
-- Provide OpenAPI code snippets on API reference endpoints to prevent hallucination during code generation.
+
+To make this portal useful to AI coding agents:
+- Point agents at [AI_AGENTS.md](AI_AGENTS.md) directly — it's the primary, self-contained reference for autonomous integration.
+- Keep the `ai/` folder's context files synchronized with the actual API surface as it evolves.
+- Prefer linking to the live OpenAPI document (`GET /api/v1/docs/openapi.json` on the deployed backend) over static reference pages when precision matters, since `docs/api-reference/` pages are hand-maintained and can drift — see [openapi-reconciliation.md](openapi-reconciliation.md) for known gaps.

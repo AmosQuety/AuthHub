@@ -2,171 +2,171 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Portal Homepage -->
   <url>
-    <loc>https://authhub.dev/docs/</loc>
+    <loc>https://amosquety.github.io/AuthHub/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/index.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/index.html</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Getting Started Section -->
   <url>
-    <loc>https://authhub.dev/docs/introduction.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/introduction.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/quickstart.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/quickstart.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/getting-started.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/getting-started.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/getting-started/create-account.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/getting-started/create-account.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/getting-started/create-oauth-client.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/getting-started/create-oauth-client.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/getting-started/pkce.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/getting-started/pkce.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/getting-started/login-and-tokens.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/getting-started/login-and-tokens.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/architecture.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/architecture.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Authentication Section -->
   <url>
-    <loc>https://authhub.dev/docs/oauth/</loc>
+    <loc>https://amosquety.github.io/AuthHub/oauth/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/oidc/</loc>
+    <loc>https://amosquety.github.io/AuthHub/oidc/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/security/session-revocation.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/security/session-revocation.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/security/mfa-enforcement.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/security/mfa-enforcement.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- API Reference Section -->
   <url>
-    <loc>https://authhub.dev/docs/api-reference/</loc>
+    <loc>https://amosquety.github.io/AuthHub/api-reference/</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/api-reference/auth/</loc>
+    <loc>https://amosquety.github.io/AuthHub/api-reference/auth/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/api-reference/oauth.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/api-reference/oauth.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/api-reference/oidc.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/api-reference/oidc.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Guides & SDKs -->
   <url>
-    <loc>https://authhub.dev/docs/tutorials/</loc>
+    <loc>https://amosquety.github.io/AuthHub/tutorials/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/sdk-guides/javascript.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/sdk-guides/javascript.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/sdk-guides/react.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/sdk-guides/react.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/sdk-guides/nextjs.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/sdk-guides/nextjs.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/migration-guides/from_auth0.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/migration-guides/from_auth0.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- Operations Section -->
   <url>
-    <loc>https://authhub.dev/docs/operations.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/operations.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/deployment/github-pages.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/deployment/github-pages.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/security/</loc>
+    <loc>https://amosquety.github.io/AuthHub/security/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- AI Agents Section -->
   <url>
-    <loc>https://authhub.dev/docs/AI_AGENTS.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/AI_AGENTS.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/ai/</loc>
+    <loc>https://amosquety.github.io/AuthHub/ai/</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Reference Section -->
   <url>
-    <loc>https://authhub.dev/docs/faq.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/faq.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/glossary.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/glossary.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://authhub.dev/docs/openapi-reconciliation.html</loc>
+    <loc>https://amosquety.github.io/AuthHub/openapi-reconciliation.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>

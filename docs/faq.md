@@ -75,7 +75,8 @@ This FAQ contains answers to common questions about AuthHub, OAuth, OIDC, and in
 - Generate a high-entropy `code_verifier`, compute `code_challenge = base64url(SHA-256(code_verifier))`, and keep `code_verifier` to exchange the code.
 
 25. Can AuthHub handle machine-to-machine auth?
-- Root API keys exist in the schema; AuthHub is primarily designed for user-centric OAuth flows. For M2M consider client credentials or API keys.
+- Yes. The token endpoint supports the `client_credentials` grant for **confidential clients only** (public clients are rejected with `unauthorized_client`, since they can't hold a secret). Call `POST /api/v1/oauth/token` with `grant_type=client_credentials`, `client_id`, and `client_secret`. The response is an access token scoped to the client's own registered `scopes` (optionally narrowed further via a `scope` parameter) — there's no `refresh_token` or `id_token`, since there's no user session to renew or identify; just call the endpoint again for a new token when the current one expires (15 min). The token's `sub` claim is the `client_id` itself, not a user id.
+- Separately, a `RootApiKey` model exists in the schema for admin record-keeping (create/list/revoke via the admin API), but it is not consumed by any request-authentication middleware — it's not a credential you can use to call the API, just an audit record.
 
 26. How can I rotate signing keys?
 - Publish the new public key in JWKS, update `JWT_PRIVATE_KEY` on servers, and keep old key available until existing tokens expire.

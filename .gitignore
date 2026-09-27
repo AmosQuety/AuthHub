@@ -13,7 +13,9 @@ backend/node_modules/
 frontend/frontend/node_modules/
 
 #
-*.txt 
+*.txt
+!robots.txt
+!docs/llms.txt
 
 
 # Build outputs

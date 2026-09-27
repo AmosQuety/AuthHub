@@ -1,0 +1,24 @@
+# AuthHub
+
+> AuthHub is a self-hostable OAuth 2.0 / OpenID Connect identity provider. Base API prefix: `/api/v1`. Live deployment: `https://authhub-npym.onrender.com`.
+
+Start here for autonomous integration — these are written to be sufficient without reading source code:
+
+- [AI Agents manifest](https://amosquety.github.io/AuthHub/#/AI_AGENTS.md): endpoint cheat sheet, auth flow summaries, grant-type parameters, token lifetimes.
+- [AI onboarding](https://amosquety.github.io/AuthHub/#/ai/onboarding.md): compact context loader.
+- [AI quick reference](https://amosquety.github.io/AuthHub/#/ai/quick-reference.md): rapid token-retrieval command cheatsheet.
+- [AI integration schema](https://amosquety.github.io/AuthHub/#/ai/integration.md): system/data model definitions.
+- Live OpenAPI document: `GET /api/v1/docs/openapi.json` on the deployed backend — the authoritative, always-current source for the full API surface. Prefer this over any static reference page.
+
+## Human-oriented docs
+
+- [Getting Started](https://amosquety.github.io/AuthHub/#/getting-started.md): registration, OAuth client setup, PKCE flow, token exchange.
+- [Quickstart](https://amosquety.github.io/AuthHub/#/quickstart.md): shortest path to a first token.
+- [API Reference](https://amosquety.github.io/AuthHub/#/api-reference/index.md)
+- [Security](https://amosquety.github.io/AuthHub/#/security/index.md)
+- [Troubleshooting / error codes](https://amosquety.github.io/AuthHub/#/troubleshooting/common-errors.md)
+- [FAQ](https://amosquety.github.io/AuthHub/#/faq.md)
+
+## Known gaps (read before assuming completeness)
+
+- [OpenAPI reconciliation](https://amosquety.github.io/AuthHub/#/openapi-reconciliation.md): documents unresolved drift between the live API and hand-maintained reference pages (JWKS path, consent endpoint, field naming).

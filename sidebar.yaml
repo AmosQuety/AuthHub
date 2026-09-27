@@ -3,7 +3,6 @@
     - page: docs/introduction.md
     - page: docs/quickstart.md
     - page: docs/getting-started.md
-    - page: docs/getting-started/index.md
     - page: docs/getting-started/create-account.md
     - page: docs/getting-started/create-oauth-client.md
     - page: docs/getting-started/pkce.md

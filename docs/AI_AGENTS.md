@@ -9,8 +9,9 @@ Platform overview
 - Base API prefix: `/api/v1`
 - Important base URLs (resolve using `BASE_URL` env or default `http://localhost:3000`)
 - Key resources: `/auth`, `/oauth`, `/oidc`, `/developer`
-- Portal home: [docs/index.md](docs/index.md)
-- Portal structure: [navigation.yaml](navigation.yaml), [sidebar.yaml](sidebar.yaml), [redocly.yaml](redocly.yaml)
+- Portal home: [docs/index.md](index.md)
+- Portal structure: [navigation.yaml](../navigation.yaml), [sidebar.yaml](../sidebar.yaml) (repo-root config files; the live site at `docs/index.html` hardcodes a manually-synced copy of `sidebar.yaml` as its `sidebarStructure` JS array)
+- Live OpenAPI document: `GET /api/v1/docs/openapi.json` on the deployed backend — prefer this over any static reference page when precision matters
 
 Authentication flow summary
 
@@ -50,7 +51,7 @@ Common integration patterns
 
 - Single-page app (public client) → PKCE + refresh via HttpOnly cookie (AuthHub sets refresh cookie during social logins).
 - Server-side app (confidential client) → client_secret used at `/oauth/token` for refresh grants.
-- Machine-to-machine: use API keys (RootApiKey model) or client credentials if implemented (not present by default).
+- Machine-to-machine: `POST /api/v1/oauth/token` with `grant_type=client_credentials`, `client_id`, `client_secret`. **Confidential clients only** — a public client (`isPublic: true`) is rejected with `unauthorized_client`. Response: `access_token` scoped to the client's registered `scopes` (or the intersection with a requested `scope` param), `expires_in: 900`. No `refresh_token`/`id_token` are issued for this grant — call the endpoint again when the token expires. The `sub` claim on the resulting token is the `client_id`, not a user id. (The `RootApiKey` model is unrelated — it's an admin-only audit record, not a usable bearer credential.)
 
 Copy-paste examples
 

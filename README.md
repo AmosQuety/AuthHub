@@ -57,7 +57,7 @@ AuthHub is a visually stunning, production-ready, full-stack Identity Provider. 
    ```
 
 2. **Backend Configuration**
-   Copy `backend/.env.example` to `backend/.env`.
+   Copy `backend/.env.development` to `backend/.env`.
    Configure your `DATABASE_URL`, `REDIS_URL`, and Stripe keys. You MUST generate an RSA Key Pair for `JWT_PRIVATE_KEY` and `JWT_PUBLIC_KEY`.
 
 3. **Database Initialization (Prisma)**

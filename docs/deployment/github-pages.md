@@ -12,7 +12,7 @@ Before GitHub Pages can serve the documentation, configure the repository privil
 2. Select the **Settings** tab.
 3. In the left navigation pane under the "Code and automation" section, click on **Pages**.
 4. Under the **Build and deployment** settings:
-   - **Source**: Select **GitHub Actions** from the dropdown menu (this bypasses manual branch builds and permits zero-touch CI/CD deploys via [docs.yml](file:///.github/workflows/docs.yml)).
+   - **Source**: Select **GitHub Actions** from the dropdown menu (this bypasses manual branch builds and permits zero-touch CI/CD deploys via [docs.yml](../../.github/workflows/docs.yml)).
 5. In the left navigation pane under the "Security" section, click on **Actions** -> **General**.
 6. Scroll down to **Workflow permissions** and select **Read and write permissions** (this allows the deploy actions runner to write build page releases). Click **Save**.
 
@@ -25,7 +25,7 @@ To host the documentation portal under a professional branded URL (e.g. `https:/
 ### Setting the Custom Domain in GitHub:
 1. On the **Pages** settings screen, scroll down to **Custom domain**.
 2. Input `authhub.dev` (or your chosen domain) and click **Save**.
-3. A `.nojekyll` file will be created in your root (we have pre-engineered this in [this config](file:///g:/MyProjects/new%20code/AuthHub/.nojekyll) to bypass Jekyll processing entirely).
+3. A `.nojekyll` file will be created in your root (we have pre-engineered this in [this config](../.nojekyll) to bypass Jekyll processing entirely).
 
 ### Configuring Your DNS Provider:
 To point your custom domain name to GitHub's server cluster, log in to your DNS provider control panel (e.g. Cloudflare, GoDaddy, Namecheap) and create these records:
@@ -74,7 +74,7 @@ To allow humans and crawler engines to index the website, verify the portal owne
    ```html
    <meta name="google-site-verification" content="..." />
    ```
-4. Insert this tag in the `<head>` block of your [landing page](file:///g:/MyProjects/new%20code/AuthHub/docs/index.html).
+4. Insert this tag in the `<head>` block of your [landing page](../index.html).
 5. Commit and push the changes, then click **Verify** in the Search Console.
 6. Once verified, submit your sitemap url: `https://authhub.dev/sitemap.xml`.
 
@@ -88,7 +88,7 @@ To allow humans and crawler engines to index the website, verify the portal owne
 
 ### Issue B: The CI/CD build fails at "Validate Redocly Configuration"
 * Run `redocly lint authhub` locally to diagnose OpenAPI validation issues.
-* Ensure all endpoints mapped in the `sidebar` of [redocly.yaml](file:///g:/MyProjects/new%20code/AuthHub/redocly.yaml) physically exist in the `docs/` folder path.
+* `redocly.yaml` only drives `redocly lint`, not the sidebar — if this step fails, the issue is the OpenAPI document served at `/api/v1/docs/openapi.json`, not a missing page in `docs/`. See [../README.md](../README.md) for what `redocly.yaml` actually controls.
 
 ### Issue C: The CI/CD build fails at "Verify Internal Links Integrity"
 * The `lychee-action` checker executes static analysis on all internal and external paths. If a markdown file links to a page you renamed or deleted, the build fails.

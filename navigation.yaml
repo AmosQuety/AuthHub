@@ -1,7 +1,7 @@
 - label: Home
   page: docs/index.md
 - label: Getting Started
-  page: docs/getting-started/index.md
+  page: docs/getting-started.md
 - label: Authentication
   page: docs/api-reference/auth/index.md
 - label: API Reference

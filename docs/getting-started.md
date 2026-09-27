@@ -20,7 +20,7 @@ graph TD
 ---
 
 ## 1. Create Account & Workspace Tenant
-1. Navigate to the **AuthHub Console** at `https://console.authhub.dev`.
+1. Register a user account via the `POST /api/v1/auth/register` endpoint (or the developer portal shipped with your AuthHub deployment, once you've run it locally or deployed it).
 2. Complete signup and verify your identity through email verification.
 3. Establish your Organization Workspace Tenant. An isolated tenant workspace separates user accounts, metadata schemas, and billing models safely.
 
@@ -30,11 +30,11 @@ graph TD
 
 ## 2. Register Your Client Application
 To integrate AuthHub with an external front-end, register an OAuth Client Application:
-1. In the console, go to **Applications** and select **Register Application**.
+1. Using your developer credentials, go to the client registration endpoints (`POST /api/v1/developer/clients`) or the developer portal UI.
 2. Select your application type:
    - **Single Page App (SPA)**: For React, Vue, Next.js, and Vite apps.
    - **Regular Web Application**: For backend-driven Express, Django, or Rails platforms.
-   - **Machine-to-Machine (M2M)**: For daemon servers, scripts, and autonomous AI agents.
+   - **Machine-to-Machine (M2M)**: For daemon servers, scripts, and autonomous AI agents. Register a **confidential** client, then call the token endpoint directly with `grant_type=client_credentials` — no human login involved. See [Login & Token Exchange API](getting-started/login-and-tokens.md) for the request shape.
 3. Record the automatically generated `client_id` and the `client_secret` (if using a confidential client).
 
 * 📖 See detailed instructions: [OAuth Client Registration](getting-started/create-oauth-client.md)
@@ -66,7 +66,7 @@ function generateChallenge(verifier) {
 Route your user to the standard authorize endpoint:
 
 ```
-GET https://authhub-npym.onrender.com/oauth/authorize?
+GET https://authhub-npym.onrender.com/api/v1/oauth/authorize?
   response_type=code&
   client_id=YOUR_CLIENT_ID&
   redirect_uri=YOUR_CALLBACK_URL&
@@ -78,7 +78,7 @@ GET https://authhub-npym.onrender.com/oauth/authorize?
 Once the user approves consent and returns to your callback URL with an authorization `code`, exchange it on the token endpoint:
 
 ```bash
-curl -X POST https://authhub-npym.onrender.com/oauth/token \
+curl -X POST https://authhub-npym.onrender.com/api/v1/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=authorization_code" \
   -d "client_id=YOUR_CLIENT_ID" \
@@ -95,7 +95,7 @@ The server returns standard JSON tokens:
   "id_token": "eyJhbGciOi...",
   "refresh_token": "r_182a39281...",
   "token_type": "Bearer",
-  "expires_in": 3600
+  "expires_in": 900
 }
 ```
 

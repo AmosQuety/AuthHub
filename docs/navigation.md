@@ -6,7 +6,7 @@ The AuthHub Developer Portal is organized into six major logical areas based on 
 
 ## 🗺️ Portal Navigation Map
 
-The high-level mapping matches the structure configured in [redocly.yaml](file:///g:/MyProjects/new%20code/AuthHub/redocly.yaml):
+The high-level mapping matches the `sidebarStructure` array defined in `docs/index.html` — the source of truth for the live site's navigation. This page should be kept in sync with it manually.
 
 ```
 Developer Portal
@@ -60,7 +60,7 @@ Developer Portal
 - **[React SDK Guide](sdk-guides/react.md)**: React Context API integration, hook listeners, and route guards.
 - **[Next.js SDK Guide](sdk-guides/nextjs.md)**: SSR pages protection and server actions validation.
 - **[Express SDK Guide](sdk-guides/express.md)**: Middleware routes validations.
-- **[Python SDK Guide](sdk-guides/python.md)**: Machine-to-machine background tasks authentication.
+- **[Python SDK Guide](sdk-guides/python.md)**: Server-side integration for Python backends. For pure machine-to-machine auth (no human user), use the `client_credentials` grant directly against the token endpoint — see [FAQ](../faq.md#25-can-authhub-handle-machine-to-machine-auth).
 - **[React Native SDK Guide](sdk-guides/react-native.md)**: Secure keychain storage and deep link handlers.
 - **[Competitor Migration Guides](migration-guides/from_auth0.md)**: High-speed user export/import templates from Auth0, Clerk, Firebase, Supabase, and Keycloak.
 
@@ -87,5 +87,6 @@ Developer Portal
 
 To add new markdown documentation pages to the portal:
 1. Save the new markdown file in the appropriate directory (e.g., `docs/security/my-feature.md`).
-2. Add the file link under the correct category group in `sidebar` within the [redocly.yaml](file:///g:/MyProjects/new%20code/AuthHub/redocly.yaml) file.
-3. Commit and push the changes to trigger the automatic deploy CI/CD.
+2. Add an entry under the correct group in the `sidebarStructure` array near the bottom of `docs/index.html` — this is what the live site actually renders.
+3. Update this page (`docs/navigation.md`) to match, so the human-readable IA reference doesn't drift from the real nav.
+4. Commit and push the changes to trigger the automatic deploy CI/CD.

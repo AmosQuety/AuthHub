@@ -11,23 +11,23 @@
     content="AuthHub developer documentation and API portal. Secure, high-performance OAuth 2.0, OIDC, session management, MFA, and AI coding agent identity infrastructure.">
   <meta name="keywords"
     content="OAuth Provider, OIDC Provider, Authentication Platform, Identity Platform, AuthHub, OAuth Server, OpenID Connect, Developer Docs, AI Agents">
-  <link rel="canonical" href="https://authhub.dev/docs/">
+  <link rel="canonical" href="https://amosquety.github.io/AuthHub/">
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://authhub.dev/docs/">
+  <meta property="og:url" content="https://amosquety.github.io/AuthHub/">
   <meta property="og:title" content="AuthHub Developer Portal | OAuth 2.0 & OIDC Identity Platform">
   <meta property="og:description"
     content="Secure, robust OAuth 2.0 & OpenID Connect identity provider built for professional developer workflows and autonomous AI coding agents.">
-  <meta property="og:image" content="https://authhub.dev/docs/images/authhub-og.svg">
+  <meta property="og:image" content="https://amosquety.github.io/AuthHub/images/authhub-og.svg">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://authhub.dev/docs/">
+  <meta property="twitter:url" content="https://amosquety.github.io/AuthHub/">
   <meta property="twitter:title" content="AuthHub Developer Portal | OAuth 2.0 & OIDC Identity Platform">
   <meta property="twitter:description"
     content="Secure, robust OAuth 2.0 & OpenID Connect identity provider built for professional developer workflows and autonomous AI coding agents.">
-  <meta property="twitter:image" content="https://authhub.dev/docs/images/authhub-og.svg">
+  <meta property="twitter:image" content="https://amosquety.github.io/AuthHub/images/authhub-og.svg">
 
   <!-- Favicon References -->
   <link rel="icon" href="images/favicon.ico" sizes="any">
@@ -500,11 +500,11 @@
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "AuthHub Developer Portal",
-    "url": "https://authhub.dev/docs/",
+    "url": "https://amosquety.github.io/AuthHub/",
     "description": "Secure, highly-scalable OAuth 2.0 & OpenID Connect identity engine built for developers and AI agents.",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://authhub.dev/docs/index.html?q={search_term_string}",
+      "target": "https://amosquety.github.io/AuthHub/index.html?q={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   }
@@ -611,7 +611,7 @@
           </div>
           <div class="code-snippet">
             <span class="code-comment"># Perform authentication flow via CLI</span>
-            curl -X POST https://authhub.dev/oauth/token \
+            curl -X POST https://authhub-npym.onrender.com/api/v1/oauth/token \
             -d <span class="code-string">"grant_type=authorization_code"</span> \
             -d <span class="code-string">"client_id=authhub_app_client"</span> \
             -d <span class="code-string">"code_verifier=pkce_verifier"</span>
@@ -623,7 +623,7 @@
                 style="display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent);"></span>
               API Service Online
             </span>
-            <a href="https://authhub-npym.onrender.com/api/v1/health"
+            <a href="https://authhub-npym.onrender.com/health"
               style="color: var(--muted); font-weight: 500;">Check Health Status →</a>
           </div>
         </div>
@@ -913,18 +913,18 @@
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-      document.documentElement.classList.add('dark-theme');
-      updateThemeIcon(true);
-    } else {
-      document.documentElement.classList.remove('dark-theme');
-      updateThemeIcon(false);
+    function applyTheme(isDark) {
+      document.documentElement.classList.toggle('dark-theme', isDark);
+      document.documentElement.classList.toggle('light-theme', !isDark);
+      updateThemeIcon(isDark);
     }
 
+    applyTheme(savedTheme === 'dark' || (!savedTheme && systemPrefersDark));
+
     themeBtn.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.toggle('dark-theme');
+      const isDark = !document.documentElement.classList.contains('dark-theme');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      updateThemeIcon(isDark);
+      applyTheme(isDark);
     });
 
     function updateThemeIcon(isDark) {
